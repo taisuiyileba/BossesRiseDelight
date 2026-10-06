@@ -1,0 +1,20 @@
+{
+  "type": "farmersdelight:cutting",
+  "ingredients": [
+    {
+      "item": "bossesrise_delight:nether_ember"
+    }
+  ],
+  "tool": {
+    "type": "farmersdelight:item_ability",
+    "action": "knife_dig"
+  },
+  "result": [
+    {
+      "item": {
+        "id": "bossesrise_delight:soul_salt",
+        "count": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '1.0.23'
+}
+group = 'com.suiyi.bossesrisedelight'
+version = project.mod_version
+base { archivesName = 'bossesrise-delight-1.21.1-neoforge' }
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    withSourcesJar()
+}
+neoForge {
+    version = project.neo_version
+    runs {
+        client {
+            client()
+            gameDirectory = file('run-client')
+        }
+        assetReview {
+            client()
+            gameDirectory = file('run-asset-review')
+            systemProperty 'bossesrise_delight.assetReview', 'true'
+            programArguments.addAll '--width', '1100', '--height', '980'
+        }
+        knifeReview {
+            client()
+            gameDirectory = file('run-knife-review')
+            systemProperty 'bossesrise_delight.knifeReview', 'true'
+            programArguments.addAll '--width', '1100', '--height', '980'
+        }
+        knifeTooltipReview {
+            client()
+            gameDirectory = file('run-knife-tooltip-review')
+            systemProperty 'bossesrise_delight.knifeTooltipReview', 'true'
+            programArguments.addAll '--width', '1100', '--height', '600'
+        }
+        server {
+            server()
+            gameDirectory = file('run-server')
+            programArgument '--nogui'
+        }
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = file('run-gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+    }
+    mods {
+        "${project.mod_id}" { sourceSet sourceSets.main }
+    }
+}
+dependencies {
+    implementation files('libs/FarmersDelight-1.21.1-1.3.4.jar')
+    compileOnly files('libs/block_factorys_bosses-2.1.2-neo-1.21.1.jar')
+    runtimeOnly files('libs/block_factorys_bosses-2.1.2-neo-1.21.1.jar', 'libs/geckolib-neoforge-1.21.1-4.8.2.jar')
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.named('processResources') {
+    inputs.property 'mod_version', project.mod_version
+    filesMatching('META-INF/neoforge.mods.toml') { expand mod_version: project.mod_version }
+}
+tasks.named('jar') {
+    exclude 'com/suiyi/bossesrisedelight/verification/**', 'data/bossesrise_delight/structure/empty.nbt'
+    from('LICENSE') { into 'META-INF' }
+}
+tasks.named('sourcesJar') { exclude 'com/suiyi/bossesrisedelight/verification/**', 'data/bossesrise_delight/structure/empty.nbt' }

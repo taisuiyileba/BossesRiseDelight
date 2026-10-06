@@ -1,0 +1,62 @@
+{
+  "display": {
+    "icon": {
+      "id": "bossesrise_delight:soul_braised_meat"
+    },
+    "title": {
+      "translate": "advancement.bossesrise_delight.soul_cuisine"
+    },
+    "description": {
+      "translate": "advancement.bossesrise_delight.soul_cuisine.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "soul_braised_meat": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bossesrise_delight:soul_braised_meat"
+            ]
+          }
+        ]
+      }
+    },
+    "soulfire_noodles": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bossesrise_delight:soulfire_noodles"
+            ]
+          }
+        ]
+      }
+    },
+    "nightwatch_pie": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bossesrise_delight:nightwatch_pie"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "soul_braised_meat",
+      "soulfire_noodles",
+      "nightwatch_pie"
+    ]
+  ],
+  "parent": "bossesrise_delight:first_ingredient"
+}

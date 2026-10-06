@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "entries": [
+    "bossesrise_delight:infernal_dragon_ingredient",
+    "bossesrise_delight:yeti_ingredient",
+    "bossesrise_delight:sandworm_ingredient",
+    "bossesrise_delight:kraken_ingredient",
+    "bossesrise_delight:underworld_knight_ingredient"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": {
+    "item": "bossesrise_delight:raw_dragon_cut"
+  },
+  "result": {
+    "id": "bossesrise_delight:roasted_dragon_cut"
+  },
+  "experience": 0.35,
+  "cookingtime": 200
+}

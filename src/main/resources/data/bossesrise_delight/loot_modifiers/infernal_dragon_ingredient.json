@@ -1,0 +1,15 @@
+{
+  "type": "bossesrise_delight:boss_ingredient",
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": "block_factorys_bosses:entities/infernal_dragon"
+    },
+    {
+      "condition": "minecraft:killed_by_player"
+    }
+  ],
+  "ingredient": "bossesrise_delight:raw_dragon_cut",
+  "minimum": 6,
+  "maximum": 10
+}

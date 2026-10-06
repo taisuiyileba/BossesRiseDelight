@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "bossesrise_delight:soul_salt"
+    },
+    {
+      "item": "minecraft:cooked_beef"
+    },
+    {
+      "item": "farmersdelight:pie_crust"
+    },
+    {
+      "item": "minecraft:brown_mushroom"
+    }
+  ],
+  "result": {
+    "id": "bossesrise_delight:nightwatch_pie",
+    "count": 1
+  }
+}

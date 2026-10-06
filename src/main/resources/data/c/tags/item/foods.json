@@ -1,0 +1,30 @@
+{
+  "replace": false,
+  "values": [
+    "bossesrise_delight:raw_dragon_cut",
+    "bossesrise_delight:raw_yeti_cut",
+    "bossesrise_delight:raw_sandworm_fillet",
+    "bossesrise_delight:raw_kraken_tentacle",
+    "bossesrise_delight:roasted_dragon_cut",
+    "bossesrise_delight:cooked_yeti_cut",
+    "bossesrise_delight:purified_sandworm_fillet",
+    "bossesrise_delight:grilled_kraken_tentacle",
+    "bossesrise_delight:dragon_skewer",
+    "bossesrise_delight:dragon_curry",
+    "bossesrise_delight:dragon_sandwich",
+    "bossesrise_delight:yeti_stew",
+    "bossesrise_delight:yeti_dumplings",
+    "bossesrise_delight:frosted_berry_tart",
+    "bossesrise_delight:sandworm_wrap",
+    "bossesrise_delight:desert_stew",
+    "bossesrise_delight:sandworm_rice",
+    "bossesrise_delight:kraken_calamari",
+    "bossesrise_delight:kraken_chowder",
+    "bossesrise_delight:sea_noodles",
+    "bossesrise_delight:hunters_feast_serving",
+    "bossesrise_delight:kraken_hotpot_serving",
+    "bossesrise_delight:soul_braised_meat",
+    "bossesrise_delight:soulfire_noodles",
+    "bossesrise_delight:nightwatch_pie"
+  ]
+}

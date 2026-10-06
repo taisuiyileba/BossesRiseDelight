@@ -1,0 +1,6 @@
+{
+  "parent": "bossesrise_delight:item/knife_handheld",
+  "textures": {
+    "layer0": "bossesrise_delight:item/dragonbone_knife"
+  }
+}

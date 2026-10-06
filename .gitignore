@@ -1,0 +1,53 @@
+# Documentation
+docs/
+
+# Gradle
+.gradle/
+gradle/
+build/
+out/
+
+# NeoForge / Minecraft Run Directories & Logs
+run/
+run-*/
+crash-reports/
+logs/
+*.log
+usernamecache.json
+
+# Dependencies & Distribution
+libs/*.jar
+release/
+
+# Reference & Research
+research/
+
+# IDEs and Editors
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+*.sublime-project
+*.sublime-workspace
+
+# Python (tools)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+desktop.ini

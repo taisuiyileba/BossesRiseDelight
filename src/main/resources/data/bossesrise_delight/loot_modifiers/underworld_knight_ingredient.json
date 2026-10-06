@@ -1,0 +1,15 @@
+{
+  "type": "bossesrise_delight:boss_ingredient",
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": "block_factorys_bosses:entities/underworld_knight"
+    },
+    {
+      "condition": "minecraft:killed_by_player"
+    }
+  ],
+  "ingredient": "bossesrise_delight:nether_ember",
+  "minimum": 6,
+  "maximum": 10
+}
