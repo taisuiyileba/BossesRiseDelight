@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": {
+    "item": "bossesrise_delight:raw_kraken_tentacle"
+  },
+  "result": "bossesrise_delight:grilled_kraken_tentacle",
+  "experience": 0.35,
+  "cookingtime": 200
+}

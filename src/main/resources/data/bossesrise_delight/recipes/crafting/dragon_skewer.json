@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "bossesrise_delight:roasted_dragon_cut"
+    },
+    {
+      "item": "minecraft:stick"
+    }
+  ],
+  "result": {
+    "item": "bossesrise_delight:dragon_skewer",
+    "count": 1
+  }
+}

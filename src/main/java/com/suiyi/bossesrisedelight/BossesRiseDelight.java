@@ -1,26 +1,27 @@
 package com.suiyi.bossesrisedelight;
 
-import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.Codec;
 import com.suiyi.bossesrisedelight.loot.BossIngredientModifier;
 import com.suiyi.bossesrisedelight.effect.CulinaryEffects;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.common.loot.IGlobalLootModifier;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod(BossesRiseDelight.MOD_ID)
 public final class BossesRiseDelight {
     public static final String MOD_ID = "bossesrise_delight";
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
-    public static final DeferredRegister<MapCodec<? extends IGlobalLootModifier>> LOOT_MODIFIERS =
-            DeferredRegister.create(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, MOD_ID);
+    public static final DeferredRegister<Codec<? extends IGlobalLootModifier>> LOOT_MODIFIERS =
+            DeferredRegister.create(ForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, MOD_ID);
 
     static {
         LOOT_MODIFIERS.register("boss_ingredient", () -> BossIngredientModifier.CODEC);
@@ -31,16 +32,17 @@ public final class BossesRiseDelight {
                 .build());
     }
 
-    public BossesRiseDelight(IEventBus bus, ModContainer container) {
+    public BossesRiseDelight() {
+        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         DelightItems.ITEMS.register(bus);
         DelightBlocks.BLOCKS.register(bus);
         CulinaryEffects.EFFECTS.register(bus);
         TABS.register(bus);
         LOOT_MODIFIERS.register(bus);
-        container.registerConfig(ModConfig.Type.SERVER, DelightConfig.SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, DelightConfig.SPEC);
     }
 
     public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        return new ResourceLocation(MOD_ID, path);
     }
 }

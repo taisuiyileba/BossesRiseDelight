@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "bossesrise_delight:roasted_dragon_cut"
+    },
+    {
+      "item": "bossesrise_delight:cooked_yeti_cut"
+    },
+    {
+      "item": "bossesrise_delight:purified_sandworm_fillet"
+    },
+    {
+      "item": "bossesrise_delight:grilled_kraken_tentacle"
+    },
+    {
+      "item": "minecraft:carrot"
+    },
+    {
+      "item": "farmersdelight:tomato"
+    },
+    {
+      "item": "farmersdelight:cabbage_leaf"
+    },
+    {
+      "item": "minecraft:bowl"
+    }
+  ],
+  "result": {
+    "item": "bossesrise_delight:hunters_feast",
+    "count": 1
+  }
+}

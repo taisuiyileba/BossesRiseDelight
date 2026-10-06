@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " D",
+    "S "
+  ],
+  "key": {
+    "D": {
+      "item": "block_factorys_bosses:dragon_bone"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "bossesrise_delight:dragonbone_knife"
+  }
+}

@@ -36,13 +36,13 @@ public final class HuntingMealItem extends ConsumableItem {
     public List<MealBonus> bonuses() { return bonuses; }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
-        super.appendHoverText(stack, context, lines, flag);
+    public void appendHoverText(ItemStack stack, Level level, List<Component> lines, TooltipFlag flag) {
+        super.appendHoverText(stack, level, lines, flag);
         if (!bonuses.isEmpty()) {
             lines.add(Component.translatable("tooltip.bossesrise_delight.battle_meal").withStyle(ChatFormatting.DARK_AQUA));
             for (MealBonus bonus : bonuses) {
-                String description = bonus.effect().value().getDescriptionId();
-                Component time = MobEffectUtil.formatDuration(bonus.instance(), 1.0F, context.tickRate());
+                String description = bonus.effect().get().getDescriptionId();
+                Component time = MobEffectUtil.formatDuration(bonus.instance(), 1.0F);
                 Component name = bonus.amplifier() > 0 ? Component.translatable("potion.withAmplifier", Component.translatable(description), Component.translatable("potion.potency." + bonus.amplifier())) : Component.translatable(description);
                 lines.add(Component.translatable("tooltip.bossesrise_delight.bonus", name, time).withStyle(ChatFormatting.BLUE));
                 lines.add(Component.translatable(description + ".description").withStyle(ChatFormatting.GRAY));

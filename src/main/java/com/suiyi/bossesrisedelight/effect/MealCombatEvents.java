@@ -2,7 +2,7 @@ package com.suiyi.bossesrisedelight.effect;
 
 import com.suiyi.bossesrisedelight.BossesRiseDelight;
 import com.suiyi.bossesrisedelight.DelightConfig;
-import net.minecraft.core.Holder;
+import java.util.function.Supplier;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -20,17 +20,19 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
-import net.unusual.block_factorys_bosses.attachment.entity.RollAttachment;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.unusual.block_factorys_bosses.capability.entity.RollCap;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
+import net.minecraft.world.level.Level;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -60,8 +62,8 @@ public final class MealCombatEvents {
     private record Echo(long due, float damage, WeakReference<LivingEntity> owner) {}
     private static State state(LivingEntity entity) { return STATES.computeIfAbsent(entity, key -> new State()); }
     private static long now(LivingEntity entity) { return entity.level().getGameTime(); }
-    private static int tier(LivingEntity entity, Holder<MobEffect> effect) {
-        MobEffectInstance instance = entity.getEffect(effect);
+    private static int tier(LivingEntity entity, Supplier<MobEffect> effect) {
+        MobEffectInstance instance = entity.getEffect(effect.get());
         return instance == null ? 0 : 1 + Math.min(3, instance.getAmplifier());
     }
     private static boolean enabled(LivingEntity entity) { return !entity.level().isClientSide && DelightConfig.effectsEnabled(); }
@@ -90,7 +92,7 @@ public final class MealCombatEvents {
                 entity.getZ(), amount, .35, .3, .35, .025);
     }
     private static void chill(LivingEntity actor, LivingEntity target) {
-        if (mayProc(actor, target)) target.addEffect(new MobEffectInstance(CulinaryEffects.RIMEBOUND, 80), actor);
+        if (mayProc(actor, target)) target.addEffect(new MobEffectInstance(CulinaryEffects.RIMEBOUND.get(), 80), actor);
     }
     private static void chillArea(LivingEntity actor) {
         for (LivingEntity target : actor.level().getEntitiesOfClass(LivingEntity.class, actor.getBoundingBox().inflate(3), e -> hostile(actor, e))) chill(actor, target);
@@ -98,11 +100,11 @@ public final class MealCombatEvents {
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
-    public static void beforeDamage(LivingDamageEvent.Pre event) {
+    public static void beforeDamage(LivingHurtEvent event) {
         LivingEntity victim = event.getEntity();
-        if (!enabled(victim) || event.getNewDamage() <= 0 || event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+        if (!enabled(victim) || event.getAmount() <= 0 || event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
         long time = now(victim);
-        float amount = event.getNewDamage();
+        float amount = event.getAmount();
         LivingEntity attacker = meleeAttacker(event.getSource());
         if (attacker != null && mayProc(attacker, victim)) {
             State a = state(attacker);
@@ -120,6 +122,16 @@ public final class MealCombatEvents {
                 particles(victim, ParticleTypes.SOUL, 10);
             }
         }
+        event.setAmount(Math.max(0, amount));
+    }
+
+    /** Forge final damage is already reduced by armor and absorption. */
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public static void defend(LivingDamageEvent event) {
+        LivingEntity victim = event.getEntity();
+        if (!enabled(victim) || event.getAmount() <= 0 || event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+        long time = now(victim);
+        float amount = event.getAmount();
         State v = state(victim);
         int digest = tier(victim, CulinaryEffects.BLAZE_DIGEST);
         if (digest > 0 && event.getSource().is(DamageTypeTags.IS_FIRE)) amount *= .4F;
@@ -143,16 +155,16 @@ public final class MealCombatEvents {
             v.gillReady = time + 100;
             particles(victim, ParticleTypes.BUBBLE, 10);
         }
-        // Absorption is applied after this event. Include it in the lethal threshold and retained damage.
+        // Forge has already consumed absorption before LivingDamageEvent.
         if (tier(victim, CulinaryEffects.SOUL_HARVEST) > 0 && v.souls >= 3
-                && amount >= victim.getHealth() + victim.getAbsorptionAmount()) {
-            amount = Math.max(0, victim.getHealth() + victim.getAbsorptionAmount() - 1);
+                && amount >= victim.getHealth()) {
+            amount = Math.max(0, victim.getHealth() - 1);
             v.souls = 0;
-            victim.removeEffect(CulinaryEffects.SOUL_HARVEST);
+            victim.removeEffect(CulinaryEffects.SOUL_HARVEST.get());
             particles(victim, ParticleTypes.SOUL_FIRE_FLAME, 24);
             if (victim instanceof ServerPlayer player) player.displayClientMessage(Component.translatable("message.bossesrise_delight.soul_saved"), true);
         }
-        event.setNewDamage(Math.max(0, amount));
+        event.setAmount(Math.max(0, amount));
     }
     private static void rechargeShell(LivingEntity actor, State s, int tier, long time) {
         if (!s.frostInitialized || time >= s.frostReady && s.frostShield <= 0) {
@@ -163,18 +175,24 @@ public final class MealCombatEvents {
         }
     }
 
-    @SubscribeEvent
-    public static void afterDamage(LivingDamageEvent.Post event) {
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void afterDamage(LivingDamageEvent event) {
         LivingEntity victim = event.getEntity();
-        if (!enabled(victim) || event.getNewDamage() <= 0) return;
+        if (!enabled(victim) || event.getAmount() <= 0) return;
         long time = now(victim);
         State v = state(victim);
-        if (tier(victim, CulinaryEffects.BLAZE_DIGEST) > 0 && event.getSource().is(DamageTypeTags.IS_FIRE) && time >= v.fireHealReady) {
+        float dealt = event.getAmount();
+        float remainingHealth = victim.getHealth() - dealt;
+        if (remainingHealth > 0 && tier(victim, CulinaryEffects.BLAZE_DIGEST) > 0 && event.getSource().is(DamageTypeTags.IS_FIRE) && time >= v.fireHealReady) {
             v.fireHealReady = time + 80;
-            victim.heal(1.5F);
+            // This event runs before health subtraction; preserve healing even at full health.
+            float healed = Math.min(1.5F, victim.getMaxHealth() - remainingHealth);
+            event.setAmount(Math.max(0, dealt - healed));
+            if (healed > dealt) victim.heal(healed - dealt);
+            remainingHealth += healed;
             particles(victim, ParticleTypes.FLAME, 5);
         }
-        if (tier(victim, CulinaryEffects.NETHER_RESOLVE) > 0 && victim.isAlive() && victim.getHealth() <= victim.getMaxHealth() * .4F && time >= v.resolveReady) {
+        if (tier(victim, CulinaryEffects.NETHER_RESOLVE) > 0 && remainingHealth > 0 && remainingHealth <= victim.getMaxHealth() * .4F && time >= v.resolveReady) {
             v.resolveStrikeUntil = time + 60;
             v.resolveReady = time + 160;
             particles(victim, ParticleTypes.SOUL_FIRE_FLAME, 8);
@@ -193,7 +211,7 @@ public final class MealCombatEvents {
         if (attacker == null || !mayProc(attacker, victim)) return;
         State a = state(attacker);
         if (a.resolveHealPending) { a.resolveHealPending = false; attacker.heal(2); }
-        if (!victim.isAlive()) return;
+        if (remainingHealth <= 0) return;
         int ember = tier(attacker, CulinaryEffects.EMBER_APPETITE);
         if (ember > 0) {
             if (time > a.emberExpires || !victim.getUUID().equals(a.emberTarget)) a.emberHits = 0;
@@ -213,7 +231,7 @@ public final class MealCombatEvents {
         if (venom > 0 && time >= a.venomReady && victim.isAlive()) {
             a.venomReady = time + 60;
             state(victim).venomOwner = new WeakReference<>(attacker);
-            victim.addEffect(new MobEffectInstance(CulinaryEffects.CORROSIVE_VENOM, 80, venom - 1), attacker);
+            victim.addEffect(new MobEffectInstance(CulinaryEffects.CORROSIVE_VENOM.get(), 80, venom - 1), attacker);
             particles(victim, ParticleTypes.SPORE_BLOSSOM_AIR, 6);
         }
         int tide = tier(attacker, CulinaryEffects.TIDAL_ECHO);
@@ -221,18 +239,18 @@ public final class MealCombatEvents {
             a.tideReady = time + 60;
             State targetState = state(victim);
             if (targetState.echoes.size() < 32) targetState.echoes.add(new Echo(time + 12,
-                    Math.min(5, Math.max(2, event.getNewDamage() * .3F)) * tide * DelightConfig.damageScale(), new WeakReference<>(attacker)));
+                    Math.min(5, Math.max(2, dealt * .3F)) * tide * DelightConfig.damageScale(), new WeakReference<>(attacker)));
         }
     }
 
     @SubscribeEvent
-    public static void entityTick(EntityTickEvent.Post event) {
-        if (event.getEntity() instanceof LivingEntity entity) updateEntity(entity);
+    public static void entityTick(LivingEvent.LivingTickEvent event) {
+        updateEntity(event.getEntity());
     }
     public static void updateEntity(LivingEntity entity) {
         if (!enabled(entity) || !entity.isAlive()) return;
         State s = STATES.get(entity);
-        boolean active = CulinaryEffects.BENEFICIAL.stream().anyMatch(entity::hasEffect);
+        boolean active = CulinaryEffects.BENEFICIAL.stream().anyMatch(effect -> entity.hasEffect(effect.get()));
         if (s == null && !active) return;
         if (s == null) s = state(entity);
         long time = now(entity);
@@ -240,7 +258,7 @@ public final class MealCombatEvents {
         if (shell > 0) rechargeShell(entity, s, shell, time);
         else { s.frostInitialized = false; s.frostShield = 0; }
         int surge = tier(entity, CulinaryEffects.SAND_SURGE);
-        boolean rolling = entity instanceof Player player && RollAttachment.fromPlayer(player).isRolling();
+        boolean rolling = entity instanceof Player player && RollCap.fromPlayer(player).map(RollCap::isRolling).orElse(false);
         boolean sprintStart = entity.isSprinting() && !s.wasSprinting && entity.onGround();
         if (surge > 0 && (sprintStart || rolling && !s.wasRolling) && time >= s.surgeReady) {
             Vec3 direction = entity.getLookAngle().multiply(1, 0, 1);
@@ -258,7 +276,7 @@ public final class MealCombatEvents {
         s.wasSprinting = entity.isSprinting();
         s.wasRolling = rolling;
         if (tier(entity, CulinaryEffects.ABYSS_GILLS) > 0 && entity.isInWater() && time % 20 == 0) entity.setAirSupply(Math.min(entity.getMaxAirSupply(), entity.getAirSupply() + 30 * tier(entity, CulinaryEffects.ABYSS_GILLS)));
-        if (!entity.hasEffect(CulinaryEffects.SOUL_HARVEST)) s.souls = 0;
+        if (!entity.hasEffect(CulinaryEffects.SOUL_HARVEST.get())) s.souls = 0;
         Iterator<Echo> echoes = s.echoes.iterator();
         while (echoes.hasNext()) {
             Echo echo = echoes.next();

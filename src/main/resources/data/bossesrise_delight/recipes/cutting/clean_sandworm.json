@@ -1,0 +1,18 @@
+{
+  "type": "farmersdelight:cutting",
+  "ingredients": [
+    {
+      "item": "bossesrise_delight:raw_sandworm_fillet"
+    }
+  ],
+  "tool": {
+    "type": "farmersdelight:tool_action",
+    "action": "knife_dig"
+  },
+  "result": [
+    {
+      "item": "bossesrise_delight:purified_sandworm_fillet",
+      "count": 2
+    }
+  ]
+}

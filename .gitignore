@@ -1,13 +1,12 @@
-# Documentation
+# Documentation and generated verification artifacts
 docs/
 
-# Gradle
+# Gradle (keep the wrapper so a fresh clone can build)
 .gradle/
-gradle/
 build/
 out/
 
-# NeoForge / Minecraft Run Directories & Logs
+# Forge / Minecraft run directories and logs
 run/
 run-*/
 crash-reports/
@@ -15,14 +14,14 @@ logs/
 *.log
 usernamecache.json
 
-# Dependencies & Distribution
+# Dependencies and distribution
 libs/*.jar
 release/
 
-# Reference & Research
+# Reference and research
 research/
 
-# IDEs and Editors
+# IDEs and editors
 .idea/
 *.iml
 *.ipr
@@ -35,7 +34,7 @@ research/
 *.sublime-project
 *.sublime-workspace
 
-# Python (tools)
+# Python tooling
 __pycache__/
 *.py[cod]
 *$py.class
@@ -47,7 +46,7 @@ env/
 node_modules/
 npm-debug.log*
 
-# OS Generated Files
+# OS generated files
 .DS_Store
 Thumbs.db
 desktop.ini

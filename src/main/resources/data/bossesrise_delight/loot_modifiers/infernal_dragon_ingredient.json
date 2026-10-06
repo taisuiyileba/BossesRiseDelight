@@ -2,7 +2,7 @@
   "type": "bossesrise_delight:boss_ingredient",
   "conditions": [
     {
-      "condition": "neoforge:loot_table_id",
+      "condition": "forge:loot_table_id",
       "loot_table_id": "block_factorys_bosses:entities/infernal_dragon"
     },
     {

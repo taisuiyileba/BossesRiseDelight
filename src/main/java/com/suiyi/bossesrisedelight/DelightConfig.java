@@ -1,19 +1,19 @@
 package com.suiyi.bossesrisedelight;
 
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class DelightConfig {
-    public static final ModConfigSpec SPEC;
-    public static final ModConfigSpec.BooleanValue INGREDIENT_DROPS;
-    public static final ModConfigSpec.IntValue DROP_MULTIPLIER;
-    public static final ModConfigSpec.IntValue KNIFE_BONUS;
-    public static final ModConfigSpec.BooleanValue MEAL_EFFECTS;
-    public static final ModConfigSpec.BooleanValue PVP_PROCS;
-    public static final ModConfigSpec.DoubleValue EFFECT_DURATION_SCALE;
-    public static final ModConfigSpec.DoubleValue PROC_DAMAGE_SCALE;
+    public static final ForgeConfigSpec SPEC;
+    public static final ForgeConfigSpec.BooleanValue INGREDIENT_DROPS;
+    public static final ForgeConfigSpec.IntValue DROP_MULTIPLIER;
+    public static final ForgeConfigSpec.IntValue KNIFE_BONUS;
+    public static final ForgeConfigSpec.BooleanValue MEAL_EFFECTS;
+    public static final ForgeConfigSpec.BooleanValue PVP_PROCS;
+    public static final ForgeConfigSpec.DoubleValue EFFECT_DURATION_SCALE;
+    public static final ForgeConfigSpec.DoubleValue PROC_DAMAGE_SCALE;
 
     static {
-        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
+        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
         builder.push("hunting");
         INGREDIENT_DROPS = builder.comment("Add boss ingredients alongside the original boss loot. Requires a player kill.")
                 .define("ingredientDrops", true);

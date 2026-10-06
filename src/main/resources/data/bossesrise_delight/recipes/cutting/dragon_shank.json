@@ -1,0 +1,18 @@
+{
+  "type": "farmersdelight:cutting",
+  "ingredients": [
+    {
+      "item": "block_factorys_bosses:dragon_shank"
+    }
+  ],
+  "tool": {
+    "type": "farmersdelight:tool_action",
+    "action": "knife_dig"
+  },
+  "result": [
+    {
+      "item": "bossesrise_delight:raw_dragon_cut",
+      "count": 2
+    }
+  ]
+}

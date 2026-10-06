@@ -9,10 +9,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.event.TickEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -22,7 +22,8 @@ import java.util.List;
 public final class KnifeTooltipReview {
     private static boolean started;
     @SubscribeEvent
-    public static void tick(ClientTickEvent.Post event) {
+    public static void tick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         Minecraft client = Minecraft.getInstance();
         if (!started && Boolean.getBoolean("bossesrise_delight.knifeTooltipReview") && client.screen instanceof TitleScreen && client.getOverlay() == null) {
             started = true;

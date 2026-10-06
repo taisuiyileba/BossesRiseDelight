@@ -1,0 +1,88 @@
+{
+  "display": {
+    "icon": {
+      "item": "bossesrise_delight:raw_dragon_cut"
+    },
+    "title": {
+      "translate": "advancement.bossesrise_delight.first_ingredient"
+    },
+    "description": {
+      "translate": "advancement.bossesrise_delight.first_ingredient.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "background": "minecraft:textures/block/stripped_oak_log.png"
+  },
+  "criteria": {
+    "raw_dragon_cut": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bossesrise_delight:raw_dragon_cut"
+            ]
+          }
+        ]
+      }
+    },
+    "raw_yeti_cut": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bossesrise_delight:raw_yeti_cut"
+            ]
+          }
+        ]
+      }
+    },
+    "raw_sandworm_fillet": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bossesrise_delight:raw_sandworm_fillet"
+            ]
+          }
+        ]
+      }
+    },
+    "raw_kraken_tentacle": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bossesrise_delight:raw_kraken_tentacle"
+            ]
+          }
+        ]
+      }
+    },
+    "nether_ember": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "bossesrise_delight:nether_ember"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "raw_dragon_cut",
+      "raw_yeti_cut",
+      "raw_sandworm_fillet",
+      "raw_kraken_tentacle",
+      "nether_ember"
+    ]
+  ]
+}

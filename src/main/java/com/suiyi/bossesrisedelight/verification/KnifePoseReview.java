@@ -15,11 +15,11 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.model.BakedModelWrapper;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.client.model.BakedModelWrapper;
 import org.joml.Vector3f;
 import vectorwing.farmersdelight.common.registry.ModItems;
 import java.nio.file.Files;
@@ -30,7 +30,8 @@ import java.nio.file.Path;
 public final class KnifePoseReview {
     private static boolean started;
     @SubscribeEvent
-    public static void tick(ClientTickEvent.Post event) {
+    public static void tick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
         if (!started && Boolean.getBoolean("bossesrise_delight.knifeReview") && mc.screen instanceof TitleScreen && mc.getOverlay() == null) {
             started = true;

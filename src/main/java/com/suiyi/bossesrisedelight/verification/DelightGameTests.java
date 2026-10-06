@@ -23,7 +23,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -32,14 +31,13 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.effect.MobEffects;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.wrapper.RecipeWrapper;
 import vectorwing.farmersdelight.common.block.FeastBlock;
 import vectorwing.farmersdelight.common.crafting.CookingPotRecipe;
 import vectorwing.farmersdelight.common.crafting.CuttingBoardRecipe;
-import vectorwing.farmersdelight.common.crafting.CuttingBoardRecipeInput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,17 +49,20 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void recipesLoadAndMatch(GameTestHelper helper) {
         var manager = helper.getLevel().getRecipeManager();
-        long count = manager.getRecipes().stream().filter(r -> r.id().getNamespace().equals(BossesRiseDelight.MOD_ID)).count();
+        long count = manager.getRecipes().stream().filter(r -> r.getId().getNamespace().equals(BossesRiseDelight.MOD_ID)).count();
         helper.assertTrue(count == 31, "All 31 addon recipes must parse; loaded " + count);
         helper.assertTrue(manager.byKey(BossesRiseDelight.id("cutting/hunters_feast")).isEmpty(), "Feast cutting must not create free bowls");
         helper.assertTrue(manager.byKey(BossesRiseDelight.id("cutting/kraken_hotpot")).isEmpty(), "Hotpot cutting must not create free bowls");
         var cutHolder = manager.byKey(BossesRiseDelight.id("cutting/clean_sandworm")).orElseThrow();
-        var cutting = (CuttingBoardRecipe) cutHolder.value();
-        var input = new CuttingBoardRecipeInput(DelightItems.RAW_SANDWORM_FILLET.get().getDefaultInstance(), DelightItems.KRAKENTOOTH_KNIFE.get().getDefaultInstance());
+        var cutting = (CuttingBoardRecipe) cutHolder;
+        var cuttingInventory = new ItemStackHandler(2);
+        cuttingInventory.setStackInSlot(0, DelightItems.RAW_SANDWORM_FILLET.get().getDefaultInstance());
+        cuttingInventory.setStackInSlot(1, DelightItems.KRAKENTOOTH_KNIFE.get().getDefaultInstance());
+        var input = new RecipeWrapper(cuttingInventory);
         helper.assertTrue(cutting.matches(input, helper.getLevel()), "Our knife must work in Farmer's Delight cutting recipes");
         ItemStack cleaned = cutting.assemble(input, helper.getLevel().registryAccess());
         helper.assertTrue(cleaned.is(DelightItems.PURIFIED_SANDWORM_FILLET.get()) && cleaned.getCount() == 2, "Cutting must produce two cleaned portions");
-        var pot = (CookingPotRecipe) manager.byKey(BossesRiseDelight.id("cooking/kraken_chowder")).orElseThrow().value();
+        var pot = (CookingPotRecipe) manager.byKey(BossesRiseDelight.id("cooking/kraken_chowder")).orElseThrow();
         var inventory = new ItemStackHandler(6);
         inventory.setStackInSlot(0, DelightItems.RAW_KRAKEN_TENTACLE.get().getDefaultInstance());
         inventory.setStackInSlot(1, new ItemStack(Items.POTATO));
@@ -69,7 +70,7 @@ public final class DelightGameTests {
         inventory.setStackInSlot(3, new ItemStack(Items.KELP));
         helper.assertTrue(pot.matches(new RecipeWrapper(inventory), helper.getLevel()), "Chowder ingredients must match the cooking pot");
         helper.assertTrue(pot.getOutputContainer().is(Items.BOWL), "The cooking pot must require the correct serving container");
-        var nether = (CookingPotRecipe) manager.byKey(BossesRiseDelight.id("cooking/soul_braised_meat")).orElseThrow().value();
+        var nether = (CookingPotRecipe) manager.byKey(BossesRiseDelight.id("cooking/soul_braised_meat")).orElseThrow();
         inventory.setStackInSlot(0, DelightItems.SOUL_SALT.get().getDefaultInstance());
         inventory.setStackInSlot(1, new ItemStack(Items.BEEF));
         inventory.setStackInSlot(2, new ItemStack(Items.POTATO));
@@ -80,14 +81,14 @@ public final class DelightGameTests {
 
     @GameTest(template = "empty")
     public static void stackedMealReturnsBowlAndAppliesEffects(GameTestHelper helper) {
-        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        Player player = helper.makeMockSurvivalPlayer();
         player.getFoodData().setFoodLevel(0);
         ItemStack meals = new ItemStack(DelightItems.KRAKEN_CHOWDER.get(), 2);
         player.setItemInHand(InteractionHand.MAIN_HAND, meals);
         ItemStack remaining = meals.finishUsingItem(helper.getLevel(), player);
         helper.assertTrue(remaining.getCount() == 1, "Only one meal should be consumed from a stack");
         helper.assertTrue(player.getInventory().countItem(Items.BOWL) == 1, "A stacked meal must return exactly one bowl");
-        helper.assertTrue(player.hasEffect(CulinaryEffects.ABYSS_GILLS), "Chowder must grant its original culinary effect");
+        helper.assertTrue(player.hasEffect(CulinaryEffects.ABYSS_GILLS.get()), "Chowder must grant its original culinary effect");
         helper.assertTrue(!player.hasEffect(MobEffects.WATER_BREATHING), "Chowder must not be a renamed vanilla water-breathing potion");
         helper.assertTrue(player.getFoodData().getFoodLevel() == 10, "Chowder must restore ten hunger points");
         helper.succeed();
@@ -98,7 +99,7 @@ public final class DelightGameTests {
         BlockPos pos = new BlockPos(2, 1, 2);
         helper.setBlock(pos.below(), Blocks.STONE);
         helper.setBlock(pos, DelightBlocks.HUNTERS_FEAST.get());
-        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        Player player = helper.makeMockSurvivalPlayer();
         helper.useBlock(pos, player);
         helper.assertBlockProperty(pos, FeastBlock.SERVINGS, 4);
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOWL, 4));
@@ -115,16 +116,15 @@ public final class DelightGameTests {
 
     @GameTest(template = "empty")
     public static void additiveLootAndKnifeBonus(GameTestHelper helper) {
-        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        Player player = helper.makeMockSurvivalPlayer();
         String[] bosses = {"infernal_dragon", "yeti", "sandworm", "kraken", "underworld_knight"};
         Item[] ingredients = {DelightItems.RAW_DRAGON_CUT.get(), DelightItems.RAW_YETI_CUT.get(),
                 DelightItems.RAW_SANDWORM_FILLET.get(), DelightItems.RAW_KRAKEN_TENTACLE.get(), DelightItems.NETHER_EMBER.get()};
         for (int i = 0; i < bosses.length; i++) {
-            ResourceLocation entityId = ResourceLocation.fromNamespaceAndPath("block_factorys_bosses", bosses[i]);
+            ResourceLocation entityId = new ResourceLocation("block_factorys_bosses", bosses[i]);
             Entity boss = BuiltInRegistries.ENTITY_TYPE.get(entityId).create(helper.getLevel());
             helper.assertTrue(boss != null, "Boss entity must be registered: " + entityId);
-            LootTable table = helper.getLevel().getServer().reloadableRegistries().getLootTable(
-                    ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.fromNamespaceAndPath("block_factorys_bosses", "entities/" + bosses[i])));
+            LootTable table = helper.getLevel().getServer().getLootData().getLootTable(new ResourceLocation("block_factorys_bosses", "entities/" + bosses[i]));
             var params = lootParams(helper, boss, player);
             List<ItemStack> base = new ArrayList<>();
             table.getRandomItemsRaw(params, base::add);
@@ -163,7 +163,7 @@ public final class DelightGameTests {
             customFoods++;
             ItemStack stack = meal.getDefaultInstance();
             helper.assertTrue(stack.getFoodProperties(p).canAlwaysEat(), "Custom battle meals must work at full hunger");
-            helper.assertTrue(stack.getFoodProperties(p).effects().isEmpty(), "Positive battle effects must be custom mechanics, not vanilla potion lists");
+            helper.assertTrue(stack.getFoodProperties(p).getEffects().isEmpty(), "Positive battle effects must be custom mechanics, not vanilla potion lists");
         }
         helper.assertTrue(customFoods == 21, "All 21 processed foods and meals need custom effects; found " + customFoods);
         p.getFoodData().setFoodLevel(20);
@@ -171,7 +171,7 @@ public final class DelightGameTests {
         p.setItemInHand(InteractionHand.MAIN_HAND, bowl);
         helper.assertTrue(bowl.use(helper.getLevel(), p, InteractionHand.MAIN_HAND).getResult().consumesAction(), "A full player must be able to begin eating a battle meal");
         ItemStack remainder = bowl.finishUsingItem(helper.getLevel(), p);
-        helper.assertTrue(remainder.is(Items.BOWL) && p.hasEffect(CulinaryEffects.SOUL_HARVEST), "Nether meal must grant Soul Harvest and return its bowl");
+        helper.assertTrue(remainder.is(Items.BOWL) && p.hasEffect(CulinaryEffects.SOUL_HARVEST.get()), "Nether meal must grant Soul Harvest and return its bowl");
         helper.succeed();
     }
 
@@ -205,7 +205,7 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void emberComboDetonatesAndDoesNotRecursivelyChain(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.EMBER_APPETITE, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.EMBER_APPETITE.get(), 400));
         Mob target = durableTarget(helper);
         float before = target.getHealth();
         for (int i = 0; i < 3; i++) { target.invulnerableTime = 0; target.hurt(helper.getLevel().damageSources().playerAttack(p), 1); }
@@ -220,7 +220,7 @@ public final class DelightGameTests {
     public static void blazeDigestReducesFireAndRestoresHealth(GameTestHelper helper) {
         Player p = actor(helper);
         p.setHealth(10);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.BLAZE_DIGEST, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.BLAZE_DIGEST.get(), 400));
         p.hurt(helper.getLevel().damageSources().inFire(), 10);
         helper.assertTrue(Math.abs(p.getHealth() - 7.5F) < .01, "Ten fire damage should become four, followed by 1.5 healing");
         p.invulnerableTime = 0;
@@ -232,12 +232,13 @@ public final class DelightGameTests {
     @GameTest(template = "empty", timeoutTicks = 180)
     public static void frostShellAbsorbsAndRebuildsAfterQuietPeriod(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.FROST_SHELL, 600));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.FROST_SHELL.get(), 600));
         Mob enemy = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 1, 2));
         enemy.setNoAi(true);
-        p.hurt(helper.getLevel().damageSources().mobAttack(enemy), 4);
+        // Generic damage stays four points even when the test world uses Easy difficulty.
+        p.hurt(helper.getLevel().damageSources().generic(), 4);
         helper.assertTrue(p.getHealth() == 20, "Frost Shell must absorb the first four health damage");
-        helper.assertTrue(enemy.hasEffect(CulinaryEffects.RIMEBOUND), "A shattered shell must release chilling mist");
+        helper.assertTrue(enemy.hasEffect(CulinaryEffects.RIMEBOUND.get()), "A shattered shell must release chilling mist");
         p.invulnerableTime = 0;
         p.hurt(helper.getLevel().damageSources().generic(), 1);
         helper.assertTrue(p.getHealth() == 19, "A spent shield must not instantly refill");
@@ -251,11 +252,11 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void frostReprisalCountersOnlyOncePerCooldown(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.FROST_REPRISAL, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.FROST_REPRISAL.get(), 400));
         Mob attacker = durableTarget(helper);
         float before = attacker.getHealth();
         p.hurt(helper.getLevel().damageSources().mobAttack(attacker), 2);
-        helper.assertTrue(Math.abs(before - attacker.getHealth() - 3) < .01 && attacker.hasEffect(CulinaryEffects.RIMEBOUND), "Counter must deal three damage and apply original frost debuff");
+        helper.assertTrue(Math.abs(before - attacker.getHealth() - 3) < .01 && attacker.hasEffect(CulinaryEffects.RIMEBOUND.get()), "Counter must deal three damage and apply original frost debuff");
         p.invulnerableTime = 0;
         p.hurt(helper.getLevel().damageSources().mobAttack(attacker), 2);
         helper.assertTrue(Math.abs(before - attacker.getHealth() - 3) < .01, "Repeated hits during cooldown must not repeat the counter");
@@ -265,7 +266,7 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void sandSurgeArmsOneStrikeAndRespectsCooldown(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.SAND_SURGE, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.SAND_SURGE.get(), 400));
         p.setOnGround(true);
         p.setSprinting(true);
         MealCombatEvents.updateEntity(p);
@@ -287,11 +288,11 @@ public final class DelightGameTests {
     @GameTest(template = "empty", timeoutTicks = 80)
     public static void venomInflictsOriginalDamageOverTime(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.VENOM_SAC, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.VENOM_SAC.get(), 400));
         Mob target = durableTarget(helper);
         float before = target.getHealth();
         target.hurt(helper.getLevel().damageSources().playerAttack(p), 1);
-        helper.assertTrue(target.hasEffect(CulinaryEffects.CORROSIVE_VENOM) && !target.hasEffect(MobEffects.POISON), "Venom must apply its original effect rather than vanilla poison");
+        helper.assertTrue(target.hasEffect(CulinaryEffects.CORROSIVE_VENOM.get()) && !target.hasEffect(MobEffects.POISON), "Venom must apply its original effect rather than vanilla poison");
         helper.runAfterDelay(25, () -> {
             helper.assertTrue(before - target.getHealth() >= 2, "The original poison must actually tick for damage");
             helper.succeed();
@@ -301,7 +302,7 @@ public final class DelightGameTests {
     @GameTest(template = "empty", timeoutTicks = 60)
     public static void tidalEchoStrikesOnceAfterDelay(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.TIDAL_ECHO, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.TIDAL_ECHO.get(), 400));
         Mob target = durableTarget(helper);
         float before = target.getHealth();
         target.hurt(helper.getLevel().damageSources().playerAttack(p), 1);
@@ -318,12 +319,12 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void soulHarvestGuardsOneLethalHitAndConsumesSouls(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.SOUL_HARVEST, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.SOUL_HARVEST.get(), 400));
         gatherSouls(helper, p);
         helper.assertTrue(MealCombatEvents.warSouls(p) == 3, "Three hostile kills must collect three souls");
         p.hurt(helper.getLevel().damageSources().generic(), 50);
         helper.assertTrue(p.isAlive() && p.getHealth() == 1, "Three souls must protect one lethal hit at one health");
-        helper.assertTrue(!p.hasEffect(CulinaryEffects.SOUL_HARVEST) && MealCombatEvents.warSouls(p) == 0, "The protection must consume the effect and all souls");
+        helper.assertTrue(!p.hasEffect(CulinaryEffects.SOUL_HARVEST.get()) && MealCombatEvents.warSouls(p) == 0, "The protection must consume the effect and all souls");
         p.invulnerableTime = 0;
         p.hurt(helper.getLevel().damageSources().generic(), 10);
         helper.assertTrue(!p.isAlive(), "Soul protection must not grant unlimited survival");
@@ -333,9 +334,8 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void soulGuardAccountsForAbsorptionHearts(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.SOUL_HARVEST, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.SOUL_HARVEST.get(), 400));
         gatherSouls(helper, p);
-        p.getAttribute(Attributes.MAX_ABSORPTION).setBaseValue(8);
         p.setAbsorptionAmount(4);
         p.setHealth(10);
         p.hurt(helper.getLevel().damageSources().generic(), 12);
@@ -349,7 +349,7 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void netherResolveTurnsLowHealthDamageIntoCounterWindow(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.NETHER_RESOLVE, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.NETHER_RESOLVE.get(), 400));
         p.setHealth(7);
         p.hurt(helper.getLevel().damageSources().generic(), 1);
         Mob target = durableTarget(helper);
@@ -365,7 +365,7 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void hunterResonanceRewardsHostileKillsOnly(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.HUNTER_RESONANCE, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.HUNTER_RESONANCE.get(), 400));
         p.setHealth(10);
         Mob hostile = helper.spawn(EntityType.ZOMBIE, new BlockPos(2, 1, 2));
         hostile.hurt(helper.getLevel().damageSources().playerAttack(p), 100);
@@ -377,7 +377,7 @@ public final class DelightGameTests {
     }
 
     private static Player actor(GameTestHelper helper) {
-        Player p = helper.makeMockPlayer(GameType.SURVIVAL);
+        Player p = helper.makeMockSurvivalPlayer();
         p.moveTo(helper.absoluteVec(new Vec3(1, 1, 1)));
         return p;
     }
@@ -389,7 +389,7 @@ public final class DelightGameTests {
             helper.setBlock(x, 1, z, Blocks.WATER);
             helper.setBlock(x, 2, z, Blocks.WATER);
         }
-        target.addEffect(new MobEffectInstance(CulinaryEffects.ABYSS_GILLS, 400));
+        target.addEffect(new MobEffectInstance(CulinaryEffects.ABYSS_GILLS.get(), 400));
         helper.runAfterDelay(3, () -> {
             helper.assertTrue(target.isInWater(), "Fixture must be in actual water");
             target.setAirSupply(160);
@@ -409,17 +409,17 @@ public final class DelightGameTests {
     @GameTest(template = "empty")
     public static void offensiveProcsDoNotHurtOtherPlayersByDefault(GameTestHelper helper) {
         Player attacker = actor(helper), target = actor(helper);
-        attacker.addEffect(new MobEffectInstance(CulinaryEffects.EMBER_APPETITE, 400));
-        attacker.addEffect(new MobEffectInstance(CulinaryEffects.VENOM_SAC, 400));
-        attacker.addEffect(new MobEffectInstance(CulinaryEffects.TIDAL_ECHO, 400));
+        attacker.addEffect(new MobEffectInstance(CulinaryEffects.EMBER_APPETITE.get(), 400));
+        attacker.addEffect(new MobEffectInstance(CulinaryEffects.VENOM_SAC.get(), 400));
+        attacker.addEffect(new MobEffectInstance(CulinaryEffects.TIDAL_ECHO.get(), 400));
         for (int i = 0; i < 3; i++) { target.invulnerableTime = 0; target.hurt(helper.getLevel().damageSources().playerAttack(attacker), 1); }
-        helper.assertTrue(target.getHealth() == 17 && !target.hasEffect(CulinaryEffects.CORROSIVE_VENOM), "Default settings must preserve normal attacks without offensive food procs against players");
+        helper.assertTrue(target.getHealth() == 17 && !target.hasEffect(CulinaryEffects.CORROSIVE_VENOM.get()), "Default settings must preserve normal attacks without offensive food procs against players");
         helper.succeed();
     }
     @GameTest(template = "empty")
     public static void soulGuardDoesNotPreventVoidDeath(GameTestHelper helper) {
         Player p = actor(helper);
-        p.addEffect(new MobEffectInstance(CulinaryEffects.SOUL_HARVEST, 400));
+        p.addEffect(new MobEffectInstance(CulinaryEffects.SOUL_HARVEST.get(), 400));
         gatherSouls(helper, p);
         p.hurt(helper.getLevel().damageSources().fellOutOfWorld(), 100);
         helper.assertTrue(!p.isAlive(), "Void and invulnerability-bypassing damage must retain their original behavior");
@@ -433,6 +433,74 @@ public final class DelightGameTests {
         target.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1);
         target.setHealth(80);
         return target;
+    }
+
+    @GameTest(template = "empty")
+    public static void forgeRollCapabilityArmsSandSurge(GameTestHelper helper) {
+        Player player = actor(helper);
+        player.addEffect(new MobEffectInstance(CulinaryEffects.SAND_SURGE.get(), 400));
+        player.setOnGround(true);
+        var roll = net.unusual.block_factorys_bosses.capability.entity.RollCap.fromPlayer(player).orElseThrow();
+        // A newly attached Forge capability begins in its five-tick initialization delay.
+        for (int tick = 0; tick < 6; tick++) roll.tick(player);
+        helper.assertTrue(roll.startRoll(player, 0, 1) && roll.isRolling(), "Bosses'Rise Forge roll capability must start a real roll");
+        MealCombatEvents.updateEntity(player);
+        Mob target = durableTarget(helper);
+        float before = target.getHealth();
+        target.hurt(helper.getLevel().damageSources().playerAttack(player), 1);
+        helper.assertTrue(Math.abs(before - target.getHealth() - 4) < .01, "A Forge roll must arm the three-damage sand strike");
+        target.invulnerableTime = 0;
+        target.hurt(helper.getLevel().damageSources().playerAttack(player), 1);
+        helper.assertTrue(Math.abs(before - target.getHealth() - 5) < .01, "A roll must arm only one strike");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void fireHealingWorksAtFullHealthOnForge(GameTestHelper helper) {
+        Player player = actor(helper);
+        player.addEffect(new MobEffectInstance(CulinaryEffects.BLAZE_DIGEST.get(), 400));
+        player.hurt(helper.getLevel().damageSources().inFire(), 10);
+        helper.assertTrue(Math.abs(player.getHealth() - 17.5F) < .01, "Full-health fire defense must reduce damage and restore 1.5 health");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void fireHealingCannotRescueAnAlreadyLethalHit(GameTestHelper helper) {
+        Player player = actor(helper);
+        player.setHealth(1);
+        player.addEffect(new MobEffectInstance(CulinaryEffects.BLAZE_DIGEST.get(), 400));
+        player.hurt(helper.getLevel().damageSources().inFire(), 10);
+        helper.assertTrue(!player.isAlive(), "Fire healing must not replace the Soul Harvest lethal guard");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void forgeKnifeTagRewardsFarmersDelightKnives(GameTestHelper helper) {
+        Player player = actor(helper);
+        Entity boss = BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation("block_factorys_bosses", "yeti")).create(helper.getLevel());
+        LootTable table = helper.getLevel().getServer().getLootData().getLootTable(new ResourceLocation("block_factorys_bosses", "entities/yeti"));
+        var params = lootParams(helper, boss, player);
+        int baseline = table.getRandomItems(params, 819L).stream().filter(s -> s.is(DelightItems.RAW_YETI_CUT.get())).mapToInt(ItemStack::getCount).sum();
+        player.setItemInHand(InteractionHand.MAIN_HAND, vectorwing.farmersdelight.common.registry.ModItems.IRON_KNIFE.get().getDefaultInstance());
+        int withKnife = table.getRandomItems(params, 819L).stream().filter(s -> s.is(DelightItems.RAW_YETI_CUT.get())).mapToInt(ItemStack::getCount).sum();
+        helper.assertTrue(withKnife == baseline + 2, "Forge common knife tags must reward Farmer's Delight's own knives");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void forgeSurgeDamageStillPassesThroughArmor(GameTestHelper helper) {
+        Player player = actor(helper);
+        player.addEffect(new MobEffectInstance(CulinaryEffects.SAND_SURGE.get(), 400));
+        player.setOnGround(true);
+        player.setSprinting(true);
+        MealCombatEvents.updateEntity(player);
+        Mob target = durableTarget(helper);
+        target.getAttribute(Attributes.ARMOR).setBaseValue(20);
+        float before = target.getHealth();
+        target.hurt(helper.getLevel().damageSources().playerAttack(player), 1);
+        float lost = before - target.getHealth();
+        helper.assertTrue(lost > 0 && lost < 2, "The melee bonus must pass through Forge armor mitigation rather than bypass it");
+        helper.succeed();
     }
     private static void gatherSouls(GameTestHelper helper, Player player) {
         for (int i = 0; i < 3; i++) {

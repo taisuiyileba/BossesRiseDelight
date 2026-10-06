@@ -48,23 +48,23 @@ FOODS = [
 FOODS = [row[:6] + (MEAL_PROFILES.get(row[0], row[6]), row[7]) for row in FOODS] + NETHER_FOODS
 
 def recipe(path, value):
-    write(RES / f'data/{MOD}/recipe/{path}.json', value)
+    write(RES / f'data/{MOD}/recipes/{path}.json', value)
 
 def cooking(name, inputs, count=1, bowl=True):
     value = {'type': 'farmersdelight:cooking', 'ingredients': [ingredient(n) for n in inputs],
-             'result': {'id': item(name), 'count': count}, 'cookingtime': 200,
+             'result': {'item': item(name), 'count': count}, 'cookingtime': 200,
              'experience': 1.0, 'recipe_book_tab': 'meals' if bowl else 'misc'}
-    if bowl: value['container'] = {'id': 'minecraft:bowl', 'count': 1}
+    if bowl: value['container'] = {'item': 'minecraft:bowl', 'count': 1}
     recipe('cooking/' + name, value)
 
 def shapeless(name, inputs, count=1):
     recipe('crafting/' + name, {'type': 'minecraft:crafting_shapeless', 'category': 'misc',
-                              'ingredients': [ingredient(n) for n in inputs], 'result': {'id': item(name), 'count': count}})
+                              'ingredients': [ingredient(n) for n in inputs], 'result': {'item': item(name), 'count': count}})
 
 def cutting(name, source, result, count=1):
     recipe('cutting/' + name, {'type': 'farmersdelight:cutting', 'ingredients': [ingredient(source)],
-                            'tool': {'type': 'farmersdelight:item_ability', 'action': 'knife_dig'},
-                            'result': [{'item': {'id': item(result), 'count': count}}]})
+                            'tool': {'type': 'farmersdelight:tool_action', 'action': 'knife_dig'},
+                            'result': [{'item': item(result), 'count': count}]})
 
 def cube(start, end, texture, top=None):
     faces = {side: {'uv': [0, 0, 16, 16], 'texture': texture} for side in ['north', 'south', 'west', 'east', 'up', 'down']}
@@ -102,7 +102,7 @@ def feast_models(name, hotpot=False):
             variants[f'facing={facing},servings={servings}'] = {'model': f'{MOD}:block/{name}_{servings}', 'y': rotation}
     write(RES / f'assets/{MOD}/blockstates/{name}.json', {'variants': variants})
     full = {'condition': 'minecraft:block_state_property', 'block': item(name), 'properties': {'servings': '4'}}
-    write(RES / f'data/{MOD}/loot_table/blocks/{name}.json', {'type': 'minecraft:block', 'pools': [
+    write(RES / f'data/{MOD}/loot_tables/blocks/{name}.json', {'type': 'minecraft:block', 'pools': [
         {'rolls': 1, 'conditions': [full, {'condition': 'minecraft:survives_explosion'}],
          'entries': [{'type': 'minecraft:item', 'name': item(name)}]},
         {'rolls': 1, 'conditions': [{'condition': 'minecraft:inverted', 'term': full}, {'condition': 'minecraft:survives_explosion'}],
@@ -114,21 +114,21 @@ def generate():
     declarations = []
     for name, en, zh, nutrition, saturation, bowl, effects, note in FOODS:
         english[f'item.{MOD}.{name}'], chinese[f'item.{MOD}.{name}'] = en, zh
-        builder = f'new FoodProperties.Builder().nutrition({nutrition}).saturationModifier({saturation}F)'
+        builder = f'new FoodProperties.Builder().nutrition({nutrition}).saturationMod({saturation}F)'
         custom = [(effect, seconds, amplifier) for effect, seconds, amplifier in effects if effect in EFFECTS]
         for effect, seconds, probability in effects:
             if effect in EFFECTS: continue
             builder += f'.effect(() -> new MobEffectInstance(MobEffects.{effect.upper()}, {seconds * 20}), {float(probability)}F)'
-        if custom: builder += '.alwaysEdible()'
+        if custom: builder += '.alwaysEat()'
         properties = 'new Item.Properties().food(' + builder + '.build())'
         if bowl: properties += '.craftRemainder(Items.BOWL).stacksTo(16)'
         note_string = json.dumps(note) if note else 'null'
         bonuses = 'List.of(' + ', '.join(f'new MealBonus(CulinaryEffects.{effect.upper()}, {seconds}, {amplifier})' for effect, seconds, amplifier in custom) + ')'
-        declarations.append(f'    public static final DeferredItem<HuntingMealItem> {name.upper()} = register("{name}", () -> new HuntingMealItem({properties}, {note_string}, {bonuses}));')
+        declarations.append(f'    public static final RegistryObject<HuntingMealItem> {name.upper()} = register("{name}", () -> new HuntingMealItem({properties}, {note_string}, {bonuses}));')
         write(RES / f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'{MOD}:item/{name}'}})
     for name, en, zh, note in SEASONINGS:
         english[f'item.{MOD}.{name}'], chinese[f'item.{MOD}.{name}'] = en, zh
-        declarations.append(f'    public static final DeferredItem<SeasoningItem> {name.upper()} = register("{name}", () -> new SeasoningItem(new Item.Properties().fireResistant(), "{note}"));')
+        declarations.append(f'    public static final RegistryObject<SeasoningItem> {name.upper()} = register("{name}", () -> new SeasoningItem(new Item.Properties().fireResistant(), "{note}"));')
         write(RES / f'assets/{MOD}/models/item/{name}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'{MOD}:item/{name}'}})
     for name, en, zh in [('dragonbone_knife', 'Dragonbone Chef Knife', '龙骨厨刀'), ('krakentooth_knife', 'Krakentooth Chef Knife', '克拉肯牙厨刀')]:
         english[f'item.{MOD}.{name}'], chinese[f'item.{MOD}.{name}'] = en, zh
@@ -185,8 +185,9 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
-import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.DeferredRegister;
 import vectorwing.farmersdelight.common.item.KnifeItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -194,25 +195,25 @@ import java.util.function.Supplier;
 
 /** Generated by tools/generate_resources.py; tune the food catalogue there. */
 public final class DelightItems {
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(BossesRiseDelight.MOD_ID);
-    public static final List<DeferredItem<? extends Item>> ALL = new ArrayList<>();
-    private static <T extends Item> DeferredItem<T> register(String name, Supplier<T> supplier) {
-        DeferredItem<T> item = ITEMS.register(name, supplier);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BossesRiseDelight.MOD_ID);
+    public static final List<RegistryObject<? extends Item>> ALL = new ArrayList<>();
+    private static <T extends Item> RegistryObject<T> register(String name, Supplier<T> supplier) {
+        RegistryObject<T> item = ITEMS.register(name, supplier);
         ALL.add(item);
         return item;
     }
 '''
     java += '\n'.join(declarations)
     java += '''
-    public static final DeferredItem<KnifeItem> DRAGONBONE_KNIFE = register("dragonbone_knife",
+    public static final RegistryObject<KnifeItem> DRAGONBONE_KNIFE = register("dragonbone_knife",
             () -> new ChefKnifeItem(Tiers.DIAMOND, new Item.Properties().fireResistant()
-                    .attributes(KnifeItem.createAttributes(Tiers.DIAMOND, 0.5F, -2.0F)), "dragonbone"));
-    public static final DeferredItem<KnifeItem> KRAKENTOOTH_KNIFE = register("krakentooth_knife",
+                    , "dragonbone"));
+    public static final RegistryObject<KnifeItem> KRAKENTOOTH_KNIFE = register("krakentooth_knife",
             () -> new ChefKnifeItem(Tiers.IRON, new Item.Properties()
-                    .attributes(KnifeItem.createAttributes(Tiers.IRON, 0.5F, -2.0F)), "krakentooth"));
-    public static final DeferredItem<BlockItem> HUNTERS_FEAST = register("hunters_feast",
+                    , "krakentooth"));
+    public static final RegistryObject<BlockItem> HUNTERS_FEAST = register("hunters_feast",
             () -> new HuntingFeastItem(DelightBlocks.HUNTERS_FEAST.get(), new Item.Properties()));
-    public static final DeferredItem<BlockItem> KRAKEN_HOTPOT = register("kraken_hotpot",
+    public static final RegistryObject<BlockItem> KRAKEN_HOTPOT = register("kraken_hotpot",
             () -> new HuntingFeastItem(DelightBlocks.KRAKEN_HOTPOT.get(), new Item.Properties()));
     private DelightItems() {}
 }
@@ -224,12 +225,12 @@ public final class DelightItems {
     for raw, cooked in [('raw_dragon_cut', 'roasted_dragon_cut'), ('raw_yeti_cut', 'cooked_yeti_cut'), ('raw_kraken_tentacle', 'grilled_kraken_tentacle')]:
         for kind, time in [('smelting', 200), ('smoking', 100), ('campfire_cooking', 600)]:
             recipe(f'{kind}/{cooked}', {'type': f'minecraft:{kind}', 'category': 'food', 'ingredient': ingredient(raw),
-                                      'result': {'id': item(cooked)}, 'experience': .35, 'cookingtime': time})
+                                      'result': item(cooked), 'experience': .35, 'cookingtime': time})
     cutting('clean_sandworm', 'raw_sandworm_fillet', 'purified_sandworm_fillet', 2)
     cutting('dragon_shank', 'block_factorys_bosses:dragon_shank', 'raw_dragon_cut', 2)
     # Feast portions require an actual bowl interaction; cutting would create free bowls.
     shapeless('dragon_skewer', ['roasted_dragon_cut', 'minecraft:stick'])
-    cooking('dragon_curry', ['raw_dragon_cut', '#c:crops/potato', 'farmersdelight:tomato', 'minecraft:carrot'])
+    cooking('dragon_curry', ['raw_dragon_cut', '#forge:vegetables/potato', 'farmersdelight:tomato', 'minecraft:carrot'])
     shapeless('dragon_sandwich', ['roasted_dragon_cut', 'minecraft:bread', 'farmersdelight:cabbage_leaf', 'farmersdelight:tomato'])
     cooking('yeti_stew', ['raw_yeti_cut', 'minecraft:potato', 'minecraft:carrot', 'minecraft:brown_mushroom'])
     cooking('yeti_dumplings', ['raw_yeti_cut', 'farmersdelight:wheat_dough', 'farmersdelight:cabbage_leaf'])
@@ -243,12 +244,12 @@ public final class DelightItems {
     shapeless('hunters_feast', ['roasted_dragon_cut', 'cooked_yeti_cut', 'purified_sandworm_fillet', 'grilled_kraken_tentacle', 'minecraft:carrot', 'farmersdelight:tomato', 'farmersdelight:cabbage_leaf', 'minecraft:bowl'])
     shapeless('kraken_hotpot', ['grilled_kraken_tentacle', 'grilled_kraken_tentacle', 'minecraft:cooked_cod', 'minecraft:cooked_salmon', 'minecraft:dried_kelp', 'minecraft:carrot', 'minecraft:bowl', 'minecraft:iron_ingot'])
     recipe('crafting/dragonbone_knife', {'type': 'minecraft:crafting_shaped', 'category': 'equipment', 'pattern': [' D', 'S '],
-                                     'key': {'D': ingredient('block_factorys_bosses:dragon_bone'), 'S': ingredient('minecraft:stick')}, 'result': {'id': item('dragonbone_knife')}})
+                                     'key': {'D': ingredient('block_factorys_bosses:dragon_bone'), 'S': ingredient('minecraft:stick')}, 'result': {'item': item('dragonbone_knife')}})
     recipe('crafting/krakentooth_knife', {'type': 'minecraft:crafting_shaped', 'category': 'equipment', 'pattern': [' T', 'S '],
-                                      'key': {'T': ingredient('block_factorys_bosses:kraken_tooth'), 'S': ingredient('minecraft:stick')}, 'result': {'id': item('krakentooth_knife')}})
+                                      'key': {'T': ingredient('block_factorys_bosses:kraken_tooth'), 'S': ingredient('minecraft:stick')}, 'result': {'item': item('krakentooth_knife')}})
     cutting('soul_salt', 'nether_ember', 'soul_salt', 2)
-    cooking('soul_braised_meat', ['soul_salt', '#c:foods/raw_beef', 'minecraft:potato', 'minecraft:brown_mushroom'])
-    cooking('soulfire_noodles', ['soul_salt', 'farmersdelight:raw_pasta', '#c:foods/raw_beef', 'farmersdelight:tomato'])
+    cooking('soul_braised_meat', ['soul_salt', '#forge:raw_beef', 'minecraft:potato', 'minecraft:brown_mushroom'])
+    cooking('soulfire_noodles', ['soul_salt', 'farmersdelight:raw_pasta', '#forge:raw_beef', 'farmersdelight:tomato'])
     shapeless('nightwatch_pie', ['soul_salt', 'minecraft:cooked_beef', 'farmersdelight:pie_crust', 'minecraft:brown_mushroom'])
 
     modifiers = []
@@ -257,11 +258,11 @@ public final class DelightItems {
         modifiers.append(item(boss + '_ingredient'))
         write(RES / f'data/{MOD}/loot_modifiers/{boss}_ingredient.json', {
             'type': item('boss_ingredient'), 'conditions': [
-                {'condition': 'neoforge:loot_table_id', 'loot_table_id': f'block_factorys_bosses:entities/{boss}'},
+                {'condition': 'forge:loot_table_id', 'loot_table_id': f'block_factorys_bosses:entities/{boss}'},
                 {'condition': 'minecraft:killed_by_player'}], 'ingredient': item(food), 'minimum': 6, 'maximum': 10})
-    write(RES / 'data/neoforge/loot_modifiers/global_loot_modifiers.json', {'replace': False, 'entries': modifiers})
+    write(RES / 'data/forge/loot_modifiers/global_loot_modifiers.json', {'replace': False, 'entries': modifiers})
     tags = {
-        'c:tools/knife': ['dragonbone_knife', 'krakentooth_knife'],
+        'forge:tools/knives': ['dragonbone_knife', 'krakentooth_knife'],
         'c:foods': [f[0] for f in FOODS],
         'c:foods/raw_meat': [f[0] for f in FOODS[:4]],
         'c:foods/cooked_meat': ['roasted_dragon_cut', 'cooked_yeti_cut', 'grilled_kraken_tentacle'],
@@ -272,8 +273,8 @@ public final class DelightItems {
     }
     for tag, names in tags.items():
         ns, path = tag.split(':')
-        write(RES / f'data/{ns}/tags/item/{path}.json', {'replace': False, 'values': list(map(item, names))})
-    write(RES / f'data/{MOD}/tags/block/feasts.json', {'replace': False, 'values': [item('hunters_feast'), item('kraken_hotpot')]})
+        write(RES / f'data/{ns}/tags/items/{path}.json', {'replace': False, 'values': list(map(item, names))})
+    write(RES / f'data/{MOD}/tags/blocks/feasts.json', {'replace': False, 'values': [item('hunters_feast'), item('kraken_hotpot')]})
     advancement('first_ingredient', 'raw_dragon_cut', 'A Taste of Victory', '胜利的滋味', 'Obtain an ingredient from a defeated boss.', '获得一份首领食材。', [food for boss, food in boss_ingredients], True)
     advancement('all_ingredients', 'hunters_feast', 'Five Hunts, One Kitchen', '五方狩猎，一间厨房', 'Collect all five boss ingredients.', '收集全部五种首领食材。', [food for boss, food in boss_ingredients], False, 'first_ingredient')
     advancement('share_the_feast', 'hunters_feast', 'Dinner Is Served', '盛宴开席', 'Prepare a shareable feast.', '制作一份可以分享的宴席。', ['hunters_feast', 'kraken_hotpot'], True, 'all_ingredients')
@@ -281,13 +282,13 @@ public final class DelightItems {
     write(RES / f'data/{MOD}/damage_type/culinary.json', {'message_id': f'{MOD}.culinary', 'scaling': 'never', 'exhaustion': .1, 'effects': 'hurt'})
     for tag_name in ['bypasses_cooldown', 'no_knockback']:
         write(RES / f'data/minecraft/tags/damage_type/{tag_name}.json', {'replace': False, 'values': [item('culinary')]})
-    for path in (RES / f'data/{MOD}/recipe').rglob('*.json'):
+    for path in (RES / f'data/{MOD}/recipes').rglob('*.json'):
         data = json.loads(path.read_text(encoding='utf-8'))
         if not data['type'].startswith('minecraft:'): continue
         candidates = data.get('ingredients') or list(data.get('key', {}).values()) or [data.get('ingredient')]
         source = next(value['item'] for value in candidates if value and 'item' in value)
-        recipe_id = item(path.relative_to(RES / f'data/{MOD}/recipe').with_suffix('').as_posix())
-        write(RES / f'data/{MOD}/advancement/recipes' / path.relative_to(RES / f'data/{MOD}/recipe'), {
+        recipe_id = item(path.relative_to(RES / f'data/{MOD}/recipes').with_suffix('').as_posix())
+        write(RES / f'data/{MOD}/advancements/recipes' / path.relative_to(RES / f'data/{MOD}/recipes'), {
             'parent': 'minecraft:recipes/root',
             'criteria': {'has_ingredient': {'trigger': 'minecraft:inventory_changed', 'conditions': {'items': [{'items': [source]}]}},
                          'has_recipe': {'trigger': 'minecraft:recipe_unlocked', 'conditions': {'recipe': recipe_id}}},
@@ -296,28 +297,28 @@ public final class DelightItems {
     def string(text):
         data = text.encode(); return struct.pack('>H', len(data)) + data
     def tag(kind, name, payload): return bytes([kind]) + string(name) + payload
-    root = tag(3, 'DataVersion', struct.pack('>i', 3955))
+    root = tag(3, 'DataVersion', struct.pack('>i', 3465))
     root += tag(9, 'size', bytes([3]) + struct.pack('>i', 3) + struct.pack('>iii', 5, 5, 5))
     root += tag(9, 'palette', bytes([10]) + struct.pack('>i', 1) + tag(8, 'Name', string('minecraft:air')) + b'\0')
     root += tag(9, 'blocks', bytes([10]) + struct.pack('>i', 0))
     root += tag(9, 'entities', bytes([10]) + struct.pack('>i', 0))
     nbt = bytes([10]) + string('') + root + b'\0'
-    dest = RES / f'data/{MOD}/structure/empty.nbt'; dest.parent.mkdir(parents=True, exist_ok=True)
+    dest = RES / f'data/{MOD}/structures/empty.nbt'; dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(gzip.compress(nbt, mtime=0))
     write(ROOT / 'docs/food-catalogue.json', [dict(zip(['id', 'en', 'zh', 'nutrition', 'saturation', 'bowl', 'effects', 'note'], row)) for row in FOODS])
     write(ROOT / 'docs/effect-catalogue.json', [{'id': effect, 'en': values[0], 'zh': values[1], 'description': values[3], 'beneficial': effect not in ['rimebound', 'corrosive_venom']} for effect, values in EFFECTS.items()])
     write(ROOT / 'docs/seasoning-catalogue.json', [{'id': name, 'en': en, 'zh': zh} for name, en, zh, note in SEASONINGS])
-    write(ROOT / 'docs/content-summary.json', {'foods': len(FOODS), 'seasonings': len(SEASONINGS), 'knives': 2, 'feasts': 2, 'items': len(FOODS) + len(SEASONINGS) + 4, 'effects': len(EFFECTS), 'textures': 4 + len(FOODS) + len(SEASONINGS) + 2 + len(EFFECTS), 'recipes': len(list((RES / f'data/{MOD}/recipe').rglob('*.json')))})
+    write(ROOT / 'docs/content-summary.json', {'foods': len(FOODS), 'seasonings': len(SEASONINGS), 'knives': 2, 'feasts': 2, 'items': len(FOODS) + len(SEASONINGS) + 4, 'effects': len(EFFECTS), 'textures': 4 + len(FOODS) + len(SEASONINGS) + 2 + len(EFFECTS), 'recipes': len(list((RES / f'data/{MOD}/recipes').rglob('*.json')))})
     print(f'Generated {len(FOODS)} foods, 2 seasonings, 2 knives, 2 feasts, {len(EFFECTS)} original effects; 31 recipes.')
 
 def advancement(name, icon, en, zh, desc_en, desc_zh, foods, either, parent=None):
-    display = {'icon': {'id': item(icon)}, 'title': {'translate': f'advancement.{MOD}.{name}'},
+    display = {'icon': {'item': item(icon)}, 'title': {'translate': f'advancement.{MOD}.{name}'},
                'description': {'translate': f'advancement.{MOD}.{name}.desc'}, 'frame': 'task', 'show_toast': True, 'announce_to_chat': True}
     if not parent: display['background'] = 'minecraft:textures/block/stripped_oak_log.png'
     values = {'display': display, 'criteria': {f: {'trigger': 'minecraft:inventory_changed', 'conditions': {'items': [{'items': [item(f)]}]}} for f in foods},
               'requirements': [foods] if either else [[f] for f in foods]}
     if parent: values['parent'] = item(parent)
-    write(RES / f'data/{MOD}/advancement/{name}.json', values)
+    write(RES / f'data/{MOD}/advancements/{name}.json', values)
     for lang, title, description in [('en_us', en, desc_en), ('zh_cn', zh, desc_zh)]:
         path = RES / f'assets/{MOD}/lang/{lang}.json'; translations = json.loads(path.read_text(encoding='utf-8'))
         translations[f'advancement.{MOD}.{name}'] = title

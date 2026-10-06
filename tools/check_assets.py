@@ -16,7 +16,7 @@ for path in RES.rglob('*.json'):
     except Exception as error: errors.append(f'{path}: {error}')
 
 dependency_files = {}
-for path in [*list((ROOT / 'libs').glob('*.jar')), Path(r'C:/Users/suiyi/.gradle/caches/neoformruntime/artifacts/minecraft_1.21.1_client.jar')]:
+for path in [*list((ROOT / 'libs').glob('*.jar')), Path.home() / '.gradle/caches/forge_gradle/minecraft_repo/versions/1.20.1/client.jar']:
     if path.exists():
         with zipfile.ZipFile(path) as archive: dependency_files.update({name: path.name for name in archive.namelist()})
 

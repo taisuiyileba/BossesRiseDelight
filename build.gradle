@@ -1,66 +1,92 @@
 plugins {
     id 'java-library'
-    id 'net.neoforged.moddev' version '1.0.23'
+    id 'net.minecraftforge.gradle' version '6.0.54'
 }
+
 group = 'com.suiyi.bossesrisedelight'
 version = project.mod_version
-base { archivesName = 'bossesrise-delight-1.21.1-neoforge' }
+base { archivesName = 'bossesrise-delight-1.20.1-forge' }
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
     withSourcesJar()
 }
-neoForge {
-    version = project.neo_version
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
     runs {
-        client {
-            client()
-            gameDirectory = file('run-client')
+        configureEach {
+            property 'forge.logging.console.level', 'info'
+            // Remap release dependency mixin refmaps into official development names.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+            mods { bossesrise_delight { source sourceSets.main } }
         }
+        client { workingDirectory project.file('run-client') }
         assetReview {
-            client()
-            gameDirectory = file('run-asset-review')
-            systemProperty 'bossesrise_delight.assetReview', 'true'
-            programArguments.addAll '--width', '1100', '--height', '980'
+            parent minecraft.runs.client
+            workingDirectory project.file('run-asset-review')
+            property 'bossesrise_delight.assetReview', 'true'
+            args '--width', '1100', '--height', '980'
         }
         knifeReview {
-            client()
-            gameDirectory = file('run-knife-review')
-            systemProperty 'bossesrise_delight.knifeReview', 'true'
-            programArguments.addAll '--width', '1100', '--height', '980'
+            parent minecraft.runs.client
+            workingDirectory project.file('run-knife-review')
+            property 'bossesrise_delight.knifeReview', 'true'
+            args '--width', '1100', '--height', '980'
         }
         knifeTooltipReview {
-            client()
-            gameDirectory = file('run-knife-tooltip-review')
-            systemProperty 'bossesrise_delight.knifeTooltipReview', 'true'
-            programArguments.addAll '--width', '1100', '--height', '600'
+            parent minecraft.runs.client
+            workingDirectory project.file('run-knife-tooltip-review')
+            property 'bossesrise_delight.knifeTooltipReview', 'true'
+            args '--width', '1100', '--height', '600'
         }
         server {
-            server()
-            gameDirectory = file('run-server')
-            programArgument '--nogui'
+            workingDirectory project.file('run-server')
+            args '--nogui'
         }
         gameTestServer {
-            type = 'gameTestServer'
-            gameDirectory = file('run-gametest')
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            workingDirectory project.file('run-gametest')
+            property 'forge.enabledGameTestNamespaces', project.mod_id
         }
     }
-    mods {
-        "${project.mod_id}" { sourceSet sourceSets.main }
-    }
 }
+repositories { flatDir { dirs 'libs' } }
 dependencies {
-    implementation files('libs/FarmersDelight-1.21.1-1.3.4.jar')
-    compileOnly files('libs/block_factorys_bosses-2.1.2-neo-1.21.1.jar')
-    runtimeOnly files('libs/block_factorys_bosses-2.1.2-neo-1.21.1.jar', 'libs/geckolib-neoforge-1.21.1-4.8.2.jar')
+    minecraft "net.minecraftforge:forge:1.20.1-${project.forge_version}"
+    implementation fg.deobf('local:FarmersDelight:1.20.1-1.3.4')
+    implementation fg.deobf('local:block_factorys_bosses:2.1.2-forge-1.20.1')
+    runtimeOnly fg.deobf('local:geckolib-forge:1.20.1-4.8.3')
 }
-tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
 tasks.named('processResources') {
     inputs.property 'mod_version', project.mod_version
-    filesMatching('META-INF/neoforge.mods.toml') { expand mod_version: project.mod_version }
+    filesMatching('META-INF/mods.toml') { expand mod_version: project.mod_version }
 }
 tasks.named('jar') {
-    exclude 'com/suiyi/bossesrisedelight/verification/**', 'data/bossesrise_delight/structure/empty.nbt'
+    exclude 'com/suiyi/bossesrisedelight/verification/**', 'data/bossesrise_delight/structures/empty.nbt'
     from('LICENSE') { into 'META-INF' }
+    finalizedBy 'reobfJar'
 }
-tasks.named('sourcesJar') { exclude 'com/suiyi/bossesrisedelight/verification/**', 'data/bossesrise_delight/structure/empty.nbt' }
+tasks.named('sourcesJar') {
+    exclude 'com/suiyi/bossesrisedelight/verification/**', 'data/bossesrise_delight/structures/empty.nbt'
+}
+
+// ForgeGradle attaches its client launch template after project evaluation.
+// Resolve it before the custom clients inherit their launch arguments.
+afterEvaluate {
+    ['assetReview', 'knifeReview', 'knifeTooltipReview'].each { name ->
+        def review = minecraft.runs.getByName(name)
+        def template = minecraft.runs.client
+        review.main(template.main)
+        review.client(true)
+        review.args.clear()
+        review.args.addAll(template.args)
+        review.args.addAll(['--width', '1100', '--height', name == 'knifeTooltipReview' ? '600' : '980'])
+        review.jvmArgs.clear()
+        review.jvmArgs.addAll(template.jvmArgs)
+        review.properties.putAll(template.properties)
+        review.environment.putAll(template.environment)
+    }
+}

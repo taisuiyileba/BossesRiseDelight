@@ -1,0 +1,25 @@
+{
+  "type": "farmersdelight:cooking",
+  "ingredients": [
+    {
+      "item": "bossesrise_delight:raw_yeti_cut"
+    },
+    {
+      "item": "farmersdelight:wheat_dough"
+    },
+    {
+      "item": "farmersdelight:cabbage_leaf"
+    }
+  ],
+  "result": {
+    "item": "bossesrise_delight:yeti_dumplings",
+    "count": 1
+  },
+  "cookingtime": 200,
+  "experience": 1.0,
+  "recipe_book_tab": "meals",
+  "container": {
+    "item": "minecraft:bowl",
+    "count": 1
+  }
+}

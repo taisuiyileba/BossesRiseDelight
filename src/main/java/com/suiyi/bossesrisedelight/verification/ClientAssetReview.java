@@ -11,11 +11,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.event.TickEvent;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,7 +28,8 @@ public final class ClientAssetReview {
     private static boolean started;
 
     @SubscribeEvent
-    public static void tick(ClientTickEvent.Post event) {
+    public static void tick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         Minecraft client = Minecraft.getInstance();
         if (Boolean.getBoolean("bossesrise_delight.assetReview") && !started && client.screen instanceof TitleScreen && client.getOverlay() == null) {
             started = true;
@@ -51,7 +52,7 @@ public final class ClientAssetReview {
         public void render(GuiGraphics gui, int mouseX, int mouseY, float partialTick) {
             gui.fill(0, 0, width, height, 0xFF222C30);
             String version = ModList.get().getModContainerById(BossesRiseDelight.MOD_ID).orElseThrow().getModInfo().getVersion().toString();
-            gui.drawString(font, "BOSSES'RISE DELIGHT " + version + "  |  Minecraft 1.21.1 / NeoForge", 28, 24, 0xEFE5CF, false);
+            gui.drawString(font, "BOSSES'RISE DELIGHT " + version + "  |  Minecraft 1.20.1 / Forge", 28, 24, 0xEFE5CF, false);
             gui.drawString(font, "25 foods / 2 soul seasonings / 2 knives / 2 feasts / 13 original effects - actual Minecraft renderer", 28, 43, 0x9BB5A9, false);
             for (int i = 0; i < DelightItems.ALL.size(); i++) {
                 ItemStack stack = DelightItems.ALL.get(i).get().getDefaultInstance();
@@ -70,7 +71,7 @@ public final class ClientAssetReview {
             gui.drawString(font, "ORIGINAL CULINARY EFFECTS", 28, effectY, 0xEFE5CF, false);
             int index = 0;
             for (var effect : CulinaryEffects.EFFECTS.getEntries()) {
-                var sprite = minecraft.getMobEffectTextures().get(effect);
+                var sprite = minecraft.getMobEffectTextures().get(effect.get());
                 if (frames == 0 && sprite.contents().name().equals(MissingTextureAtlasSprite.getLocation())) missingEffects.add(effect.getId().toString());
                 int x = 30 + (index % 7) * 152, y = effectY + 22 + (index / 7) * 62;
                 gui.pose().pushPose();
@@ -78,7 +79,7 @@ public final class ClientAssetReview {
                 gui.pose().scale(2, 2, 1);
                 gui.blit(0, 0, 0, 18, 18, sprite);
                 gui.pose().popPose();
-                gui.drawString(font, Component.translatable(effect.value().getDescriptionId()), x, y + 40, 0xE8DCC4, false);
+                gui.drawString(font, Component.translatable(effect.get().getDescriptionId()), x, y + 40, 0xE8DCC4, false);
                 index++;
             }
             gui.drawString(font, "Native 16px sprites / binary alpha / original art / 4-serving feasts", 28, height - 24, 0x9BB5A9, false);
