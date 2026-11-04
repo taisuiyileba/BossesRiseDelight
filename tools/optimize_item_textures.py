@@ -215,6 +215,147 @@ def optimize_texture(cell, name, tw_th=None, c_boost=1.32, s_boost=1.25, k=None,
         
     return im_out
 
+HANDCRAFTED_BOSS_STEWS = {
+    'yeti_stew': (
+        {
+            "K": "#3a2610", "D": "#533909", "M": "#714f0f", "L": "#926c3e",
+            "N": "#24384a", "B": "#317a9e", "C": "#48c3e3", "I": "#98f4f4",
+            "W": "#f4fbfb", "S": "#afd5e1", "R": "#682c36", "P": "#cc5a6b",
+            "F": "#f5b0bc", "O": "#ff8e09", "E": "#c45108",
+        },
+        [
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . N N N . . . .",
+            ". . . . R R R . N W I C N . . .",
+            ". . . R W F P R N I C B B N . .",
+            ". . R W F P F P S W I C B N . .",
+            ". . R F P F P W S I C B B N . .",
+            ". . D P F P W W O E I C B D . .",
+            ". K L W P W S O O E S C S L K .",
+            ". K D D W S W O E S W S D D K .",
+            ". K L D D S B D C I D D D D K .",
+            ". . K L M M B M C M M M D K . .",
+            ". . . K K D M M M M D K K . . .",
+            ". . . . . K K K K K K . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+        ],
+    ),
+    'desert_stew': (
+        {
+            "K": "#3a2610", "D": "#533909", "M": "#714f0f", "L": "#926c3e",
+            "W": "#fcdd93", "T": "#c29d65", "A": "#945e36", "Z": "#604426",
+            "R": "#8a2c06", "O": "#dc8218", "Y": "#f7bc5e", "G": "#6be11a",
+            "V": "#39b430", "S": "#245c1c",
+        },
+        [
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . K K K . . . .",
+            ". . . . . . . . K W W T K . . .",
+            ". . . . K K K . K Z W T A K . .",
+            ". . . K W Y O K T A Z W T K . .",
+            ". . . K Y O G G V T A Z T K . .",
+            ". . D O R Y G V S W T A Z D . .",
+            ". K L Y O R O Y O W T A O L K .",
+            ". K D D O Y O R G V Y R D D K .",
+            ". K L D D R D D G V D D D D K .",
+            ". . K L M T A M V M A T D K . .",
+            ". . . K K D M M M M D K K . . .",
+            ". . . . . K K K K K K . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+        ],
+    ),
+    'dragon_curry': (
+        {
+            "K": "#3a2414", "D": "#533909", "M": "#714f0f", "L": "#926c3e",
+            "Z": "#3c221e", "B": "#5e463e", "H": "#8c6e60", "R": "#7c1e08",
+            "C": "#bd2f14", "O": "#e65c1c", "F": "#ff941c", "Y": "#ffd86b",
+        },
+        [
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . Z Z Z . . .",
+            ". . . . Z Z Z . . Z H Y H Z . .",
+            ". . . Z C F C Z Z H Y F B Z . .",
+            ". . Z C F Y C R B H F B Z . . .",
+            ". . Z R C C R Y F B H B O Z . .",
+            ". . D C R O F Y Y F B O C D . .",
+            ". K L O C F Y Y F O C R C L K .",
+            ". K D D O F Y F O C R O D D K .",
+            ". K L D D R O F C R D D D D K .",
+            ". . K L B M M O R M B M D K . .",
+            ". . . K K D M M M M D K K . . .",
+            ". . . . . K K K K K K . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+        ],
+    ),
+    'kraken_chowder': (
+        {
+            "K": "#3a2610", "D": "#533909", "M": "#714f0f", "L": "#926c3e",
+            "Z": "#3e1820", "R": "#9b2832", "C": "#e54953", "P": "#dda277",
+            "S": "#f7ddc3", "W": "#fcfbed", "B": "#d4e0dc", "Y": "#eccd96",
+            "G": "#4d8c3b", "E": "#265834",
+        },
+        [
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . Z Z Z Z . . . .",
+            ". . . . . . . Z C C C R Z . . .",
+            ". . . . E E . Z S P C C R Z . .",
+            ". . . E G G E Z Z S P C R Z . .",
+            ". . E G G W Y W Z S P C R Z . .",
+            ". . D G W B Y W S P C R W D . .",
+            ". K L W B C R W S C R W B L K .",
+            ". K D D W W B G W B Y W D D K .",
+            ". K L D D W B G D D D D D D K .",
+            ". . K L M M M B M M M M D K . .",
+            ". . . K K D M M M M D K K . . .",
+            ". . . . . K K K K K K . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+        ],
+    ),
+    'soul_braised_meat': (
+        {
+            "K": "#3a2610", "D": "#533909", "M": "#714f0f", "L": "#926c3e",
+            "A": "#57696b", "H": "#889c9b", "N": "#1e383e", "T": "#2c7f7c",
+            "C": "#49e0d4", "W": "#bef9ff", "Z": "#442218", "G": "#5c3020",
+            "B": "#784230", "R": "#9c5e44", "O": "#d36a0d", "Y": "#f2ab46",
+        },
+        [
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . N N . . . .",
+            ". . . . Z Z Z . . N C T N . . .",
+            ". . . Z R R B Z N W C T N . . .",
+            ". . Z R R B G B N W W C T N . .",
+            ". . Z B R B G R C W C T B Z . .",
+            ". . D B G B R O Y C T R B D . .",
+            ". K H G B R O Y O C B R Y H K .",
+            ". K D D O Y O G B T O Y D D K .",
+            ". K H A D G D D C T D A H D K .",
+            ". . K L M M M M T M M M D K . .",
+            ". . . K K D M M M M D K K . . .",
+            ". . . . . K K K K K K . . . . .",
+            ". . . . . . . . . . . . . . . .",
+            ". . . . . . . . . . . . . . . .",
+        ],
+    ),
+}
+
+def render_handcrafted(palette, grid):
+    im = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, row in enumerate(grid):
+        for x, tok in enumerate(row.split()):
+            if tok != ".":
+                hx = palette[tok].lstrip("#")
+                im.putpixel((x, y), (int(hx[0:2], 16), int(hx[2:4], 16), int(hx[4:6], 16), 255))
+    return im
+
 def main():
     atlas = Image.open(ATLAS_PATH).convert('RGBA')
     ITEM_OUT.mkdir(parents=True, exist_ok=True)
@@ -230,7 +371,10 @@ def main():
         else:
             cell = atlas.crop((col * 256, row * 256, (col + 1) * 256, (row + 1) * 256))
             
-        optimized_im = optimize_texture(cell, name)
+        if name in HANDCRAFTED_BOSS_STEWS:
+            optimized_im = render_handcrafted(*HANDCRAFTED_BOSS_STEWS[name])
+        else:
+            optimized_im = optimize_texture(cell, name)
         dest = ITEM_OUT / f"{name}.png"
         optimized_im.save(dest)
         
@@ -247,7 +391,10 @@ def main():
         print(f"Optimizing all {len(NETHER_ITEMS)} nether food textures...")
         for idx, (name, r, c, c_boost, s_boost, k, tw_th, merge_dist) in enumerate(NETHER_ITEMS):
             cell = nether_atlas.crop((c * 512, r * 512, (c + 1) * 512, (r + 1) * 512))
-            optimized_im = optimize_texture(cell, name, tw_th=tw_th, c_boost=c_boost, s_boost=s_boost, k=k, merge_dist=merge_dist)
+            if name in HANDCRAFTED_BOSS_STEWS:
+                optimized_im = render_handcrafted(*HANDCRAFTED_BOSS_STEWS[name])
+            else:
+                optimized_im = optimize_texture(cell, name, tw_th=tw_th, c_boost=c_boost, s_boost=s_boost, k=k, merge_dist=merge_dist)
             dest = ITEM_OUT / f"{name}.png"
             optimized_im.save(dest)
             
