@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import hashlib
+from release_common import mod_version, release_jar
 
 ROOT = Path(__file__).resolve().parents[1]
 LOGS = ROOT / 'build/verification'
@@ -62,8 +63,8 @@ def main():
         raise RuntimeError('Translated knife tooltip review failed')
     if initial_hash != source_hash():
         raise RuntimeError('Sources changed while verification was running; rerun verification')
-    jar = ROOT / 'build/libs/bossesrise-delight-1.20.1-forge-1.0.0.jar'
-    report = {'minecraft': '1.20.1', 'loader': 'Forge', 'forge': '47.4.20', 'java_target': 17,
+    jar = release_jar()
+    report = {'version': mod_version(), 'minecraft': '1.20.1', 'loader': 'Forge', 'forge': '47.4.20', 'java_target': 17,
               'game_tests': {'passed': expected, 'failed': 0},
               'client_models': {'passed': 31, 'missing': 0}, 'client_effect_icons': {'passed': 13, 'missing': 0},
               'held_knife_contexts': 8, 'translated_knife_tooltips': 2,

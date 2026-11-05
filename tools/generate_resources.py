@@ -66,34 +66,130 @@ def cutting(name, source, result, count=1):
                             'tool': {'type': 'farmersdelight:tool_action', 'action': 'knife_dig'},
                             'result': [{'item': item(result), 'count': count}]})
 
-def cube(start, end, texture, top=None):
-    faces = {side: {'uv': [0, 0, 16, 16], 'texture': texture} for side in ['north', 'south', 'west', 'east', 'up', 'down']}
-    if top: faces['up']['texture'] = top
+def box_uv(start, end, face_map):
+    faces = {}
+    for side in ['north', 'south', 'west', 'east', 'up', 'down']:
+        if side in face_map:
+            tex, uv = face_map[side][:2]
+            entry = {'uv': uv, 'texture': tex}
+            if len(face_map[side]) > 2:
+                entry.update(face_map[side][2])
+            faces[side] = entry
     return {'from': start, 'to': end, 'faces': faces}
+
+def uniform_box(start, end, texture, uv=None, top_tex=None, top_uv=None, side_uv=None, down_tex=None):
+    u = uv or [0, 0, 16, 16]
+    su = side_uv or u
+    tu = top_uv or u
+    t_up = top_tex or texture
+    t_down = down_tex or texture
+    return box_uv(start, end, {
+        'north': (texture, su), 'south': (texture, su),
+        'west': (texture, su), 'east': (texture, su),
+        'up': (t_up, tu), 'down': (t_down, u),
+    })
+
+FEAST_DISPLAY = {
+    'gui': {'rotation': [30, 225, 0], 'translation': [0, 2.25, 0], 'scale': [0.82, 0.82, 0.82]},
+    'ground': {'rotation': [0, 0, 0], 'translation': [0, 3, 0], 'scale': [0.4, 0.4, 0.4]},
+    'fixed': {'rotation': [-90, 0, 0], 'translation': [0, 0, -4], 'scale': [0.75, 0.75, 0.75]},
+    'thirdperson_righthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 2], 'scale': [0.5, 0.5, 0.5]},
+    'thirdperson_lefthand': {'rotation': [75, 225, 0], 'translation': [0, 2.5, 2], 'scale': [0.5, 0.5, 0.5]},
+    'firstperson_righthand': {'rotation': [0, 45, 0], 'translation': [0, 3.2, 0], 'scale': [0.55, 0.55, 0.55]},
+    'firstperson_lefthand': {'rotation': [0, 225, 0], 'translation': [0, 3.2, 0], 'scale': [0.55, 0.55, 0.55]},
+}
 
 def feast_models(name, hotpot=False):
     variants = {}
     for servings in range(5):
         elements = []
         if hotpot:
-            elements += [cube([2, 0, 2], [14, 1, 14], '#metal')]
-            elements += [cube([2, 1, 2], [14, 5, 3], '#metal'), cube([2, 1, 13], [14, 5, 14], '#metal'),
-                         cube([2, 1, 3], [3, 5, 13], '#metal'), cube([13, 1, 3], [14, 5, 13], '#metal'),
-                         cube([0, 2, 6], [2, 4, 10], '#metal'), cube([14, 2, 6], [16, 4, 10], '#metal')]
-            if servings:
-                elements += [cube([3, 1, 3], [13, 3, 13], '#broth')]
+            # 1. Glowing Brazier Stove Core & 4 Forged Iron Corner Feet (y=0..1)
+            elements.append(uniform_box([3, 0, 3], [13, 1, 13], '#metal', uv=[2, 4, 14, 10], side_uv=[0, 12, 16, 16]))
+            for fx, fz in [(2, 2), (12, 2), (2, 12), (12, 12)]:
+                elements.append(uniform_box([fx, 0, fz], [fx + 2, 1, fz + 2], '#metal', uv=[0, 0, 4, 4], side_uv=[0, 2, 4, 4]))
+            # 2. Cauldron Floor (y=1..2) & 4 Riveted Dark-Iron Walls (y=2..5)
+            elements.append(uniform_box([2, 1, 2], [14, 2, 14], '#metal', uv=[2, 4, 14, 10], side_uv=[0, 10, 16, 12]))
+            elements.append(uniform_box([2, 2, 2], [14, 5, 3], '#metal', uv=[0, 0, 16, 2], top_uv=[0, 0, 16, 2], side_uv=[0, 2, 16, 11]))
+            elements.append(uniform_box([2, 2, 13], [14, 5, 14], '#metal', uv=[0, 0, 16, 2], top_uv=[0, 0, 16, 2], side_uv=[0, 2, 16, 11]))
+            elements.append(uniform_box([2, 2, 3], [3, 5, 13], '#metal', uv=[0, 0, 16, 2], top_uv=[0, 0, 2, 16], side_uv=[0, 2, 16, 11]))
+            elements.append(uniform_box([13, 2, 3], [14, 5, 13], '#metal', uv=[0, 0, 16, 2], top_uv=[14, 0, 16, 16], side_uv=[0, 2, 16, 11]))
+            # 3. Central Yuanyang Hotpot Divider & 2 Ornate Brass Side Handles
+            elements.append(uniform_box([7.5, 2, 3], [8.5, 4.3, 13], '#metal', uv=[7, 0, 9, 10], top_uv=[7, 0, 9, 16], side_uv=[0, 0, 16, 3]))
+            elements.append(uniform_box([0, 2.5, 5.5], [2, 4.2, 10.5], '#metal', uv=[0, 10, 8, 12], side_uv=[0, 10, 12, 12]))
+            elements.append(uniform_box([14, 2.5, 5.5], [16, 4.2, 10.5], '#metal', uv=[8, 10, 16, 12], side_uv=[4, 10, 16, 12]))
+            # 4. Boiling Dual-Flavor Broth & 4 Sculpted Seafood Portions
+            if servings > 0:
+                elements.append(uniform_box([3, 2, 3], [13, 3.6, 13], '#broth', uv=[0, 0, 16, 16], side_uv=[0, 4, 16, 8]))
+            hotpot_portions = [
+                # Portion 1 (NW): Coiled Giant Kraken Tentacle Arch in Spicy Broth
+                [
+                    uniform_box([3.4, 3.4, 3.4], [7.4, 4.8, 7.4], '#food', uv=[0, 0, 8, 8], side_uv=[0, 1, 8, 6]),
+                    uniform_box([4.0, 4.8, 4.0], [6.5, 5.8, 6.5], '#food', uv=[1, 1, 7, 7], side_uv=[1, 1, 7, 5]),
+                ],
+                # Portion 2 (NE): Crispy Golden Calamari & Seared Salmon in Creamy Broth
+                [
+                    uniform_box([8.6, 3.4, 3.4], [12.6, 4.8, 7.4], '#food', uv=[8, 0, 16, 8], side_uv=[8, 1, 16, 6]),
+                    uniform_box([9.3, 4.8, 4.2], [11.8, 5.5, 6.7], '#food', uv=[9, 1, 15, 7], side_uv=[9, 1, 15, 5]),
+                ],
+                # Portion 3 (SW): Simmered Cod Tofu Cubes & Brown Mushrooms
+                [
+                    uniform_box([3.4, 3.4, 8.6], [7.4, 4.7, 12.6], '#food', uv=[0, 8, 8, 16], side_uv=[0, 9, 8, 15]),
+                    uniform_box([4.2, 4.7, 9.4], [6.7, 5.4, 11.9], '#food', uv=[0, 8, 6, 14], side_uv=[1, 9, 7, 13]),
+                ],
+                # Portion 4 (SE): Second Coiled Kraken Tentacle & Deep-Sea Kelp
+                [
+                    uniform_box([8.6, 3.4, 8.6], [12.6, 4.8, 12.6], '#food', uv=[8, 8, 16, 16], side_uv=[0, 0, 8, 6]),
+                    uniform_box([9.4, 4.8, 9.4], [11.9, 5.8, 11.9], '#food', uv=[1, 1, 7, 7], side_uv=[1, 1, 7, 5]),
+                ],
+            ]
+            for grp in hotpot_portions[:servings]:
+                elements.extend(grp)
         else:
-            elements += [cube([2, 0, 2], [14, 1, 14], '#tray')]
-        portions = [([4, 1 if not hotpot else 3, 4], [8, 5 if not hotpot else 5, 8]),
-                    ([8, 1 if not hotpot else 3, 4], [12, 5 if not hotpot else 5, 8]),
-                    ([4, 1 if not hotpot else 3, 8], [8, 5 if not hotpot else 5, 12]),
-                    ([8, 1 if not hotpot else 3, 8], [12, 5 if not hotpot else 5, 12])]
-        for start, end in portions[:servings]: elements.append(cube(start, end, '#food'))
-        if servings and not hotpot:
-            elements += [cube([3, 1, 12], [6, 2, 13], '#carrot'), cube([10, 1, 3], [13, 2, 4], '#herb')]
+            # 1. Rimmed Wooden Feast Platter (y=0..2) using proportional Farmer's Delight tray UVs
+            elements.append(uniform_box([2, 0, 2], [14, 1, 14], '#tray', uv=[2, 2, 14, 14], side_uv=[2, 15, 14, 16], down_tex='#tray_bottom'))
+            elements.append(uniform_box([2, 1, 2], [14, 2, 3], '#tray', uv=[2, 1, 14, 2], side_uv=[2, 14, 14, 15]))
+            elements.append(uniform_box([2, 1, 13], [14, 2, 14], '#tray', uv=[2, 14, 14, 15], side_uv=[2, 14, 14, 15]))
+            elements.append(uniform_box([2, 1, 3], [3, 2, 13], '#tray', uv=[1, 3, 2, 13], side_uv=[3, 14, 13, 15]))
+            elements.append(uniform_box([13, 1, 3], [14, 2, 13], '#tray', uv=[14, 3, 15, 13], side_uv=[3, 14, 13, 15]))
+            if servings == 0:
+                # Leftover gnawed Dragon Bone & Frost Crystal shard on the tray
+                elements.append(uniform_box([4.5, 1, 5], [9.5, 2, 7], '#food', uv=[0, 0, 4, 2], side_uv=[0, 0, 4, 2]))
+                elements.append(uniform_box([9, 1, 9], [11, 2, 11], '#food', uv=[10, 0, 13, 2], side_uv=[10, 0, 13, 2]))
+            else:
+                # Fresh Cabbage & Herb Garnish Bed + Roasted Carrot Sticks
+                elements.append(uniform_box([3, 1, 3], [13, 1.6, 13], '#herb', uv=[2, 2, 14, 14], side_uv=[2, 14, 14, 16]))
+                elements.append(uniform_box([3.2, 1.5, 11.2], [5.8, 2.4, 12.8], '#carrot', uv=[2, 2, 6, 4], side_uv=[2, 2, 6, 4]))
+                elements.append(uniform_box([10.2, 1.5, 3.2], [12.8, 2.4, 4.8], '#carrot', uv=[2, 2, 6, 4], side_uv=[2, 2, 6, 4]))
+            feast_portions = [
+                # Portion 1 (NW): Roasted Infernal Dragon Steak + Protruding 3D Dragon Bone Knob
+                [
+                    uniform_box([3.4, 1.5, 3.4], [8.0, 4.5, 8.0], '#food', uv=[0, 0, 8, 8], side_uv=[0, 2, 8, 7]),
+                    uniform_box([3.0, 3.6, 3.0], [5.4, 5.5, 5.4], '#food', uv=[0, 0, 4, 3], side_uv=[0, 0, 4, 3]),
+                ],
+                # Portion 2 (NE): Cooked Frost Yeti Roast + Protruding 3D Icy-Cyan Permafrost Horn
+                [
+                    uniform_box([8.0, 1.5, 3.4], [12.6, 4.5, 8.0], '#food', uv=[8, 0, 16, 8], side_uv=[8, 2, 16, 7]),
+                    uniform_box([10.2, 3.6, 3.0], [12.6, 5.5, 5.4], '#food', uv=[9, 0, 15, 3], side_uv=[9, 0, 15, 3]),
+                ],
+                # Portion 3 (SW): Purified Sandworm Chitin Fillet + Dorsal Chitin Ridge
+                [
+                    uniform_box([3.4, 1.5, 8.0], [8.0, 4.2, 12.6], '#food', uv=[0, 8, 8, 16], side_uv=[0, 9, 8, 15]),
+                    uniform_box([4.2, 4.2, 8.8], [7.2, 5.1, 11.8], '#food', uv=[1, 8, 7, 13], side_uv=[1, 8, 7, 12]),
+                ],
+                # Portion 4 (SE): Grilled Kraken Tentacle Coil + Curled Tentacle Tip Arch
+                [
+                    uniform_box([8.0, 1.5, 8.0], [12.6, 4.2, 12.6], '#food', uv=[8, 8, 15, 15], side_uv=[8, 9, 15, 15]),
+                    uniform_box([9.2, 4.2, 9.2], [12.0, 5.3, 12.0], '#food', uv=[9, 9, 14, 14], side_uv=[9, 9, 14, 13]),
+                ],
+            ]
+            for grp in feast_portions[:servings]:
+                elements.extend(grp)
         model = {'parent': 'minecraft:block/block', 'render_type': 'minecraft:cutout',
+                 'display': FEAST_DISPLAY,
                  'textures': {'particle': f'{MOD}:block/' + ('tentacle' if hotpot else 'roast'),
-                              'tray': 'farmersdelight:block/tray', 'metal': f'{MOD}:block/metal',
+                              'tray': 'farmersdelight:block/tray', 'tray_bottom': 'farmersdelight:block/tray_bottom',
+                              'metal': f'{MOD}:block/metal',
                               'broth': f'{MOD}:block/broth', 'food': f'{MOD}:block/' + ('tentacle' if hotpot else 'roast'),
                               'carrot': 'minecraft:block/orange_terracotta', 'herb': 'minecraft:block/moss_block'},
                  'elements': elements}

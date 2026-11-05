@@ -50,3 +50,9 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local publishing credentials
+/api_tokens.json
+/api_tokens.md
+/.env
+/.env.*

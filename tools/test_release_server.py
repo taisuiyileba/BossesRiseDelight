@@ -10,6 +10,7 @@ import queue
 import socket
 import threading
 import time
+from release_common import release_jar
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,7 +26,7 @@ def main():
         raise RuntimeError('Install the official Forge 1.20.1-47.4.20 server into this isolated directory first')
     mods = server / 'mods'
     mods.mkdir(exist_ok=True)
-    jar = ROOT / 'build/libs/bossesrise-delight-1.20.1-forge-1.0.0.jar'
+    jar = release_jar()
     shutil.copy2(jar, mods / jar.name)
     for record in json.loads((ROOT / 'dependencies.lock.json').read_text()):
         source = ROOT / 'libs' / record['file']

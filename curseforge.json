@@ -1,0 +1,10 @@
+{
+  "project_id": 1729419,
+  "slug": "bossesrise-delight",
+  "minecraft": "1.20.1",
+  "loader": "Forge",
+  "java": 17,
+  "artifact": "bossesrise-delight-1.20.1-forge",
+  "game_versions": [9990, 7498, 9638, 9639, 8326],
+  "dependencies": ["bossesrise", "farmers-delight"]
+}

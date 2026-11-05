@@ -1,12 +1,12 @@
 # Bosses'Rise Delight / 首领乐事
 
-Minecraft **1.20.1** · Forge **47.4.20+（47.x）** · Java **17** · 附属版本 **1.0.0**。
+Minecraft **1.20.1** · Forge **47.4.20+（47.x）** · Java **17** · 附属版本 **1.1.0**。
 
 由相邻目录中的 1.21.1 NeoForge 版本移植。保留 25 个食物、2 种冥骑调味材料、2 把厨刀、2 个四人份宴席方块、31 条配方和 13 种原创效果，以及中英文提示、贴图和模型。
 
 ## 安装
 
-客户端与服务端均安装 `release/bossesrise-delight-1.20.1-forge-1.0.0.jar`，并安装以下 **1.20.1 Forge** 前置：
+客户端与服务端均安装 `release/bossesrise-delight-1.20.1-forge-1.1.0.jar`，并安装以下 **1.20.1 Forge** 前置：
 
 - [Bosses'Rise 2.1.2](https://modrinth.com/mod/bossesrise/version/jwkdmnrh)
 - [Farmer's Delight 1.20.1-1.3.4](https://modrinth.com/mod/farmers-delight/version/SiIpcZzM)
@@ -50,12 +50,15 @@ Forge 的餐食防御在护甲和吸收心结算后的最终伤害事件中生�
 ```powershell
 python -m pip install -r requirements-dev.txt
 python tools/bootstrap.py
+python tools/optimize_item_textures.py
 python tools/generate_resources.py
 python tools/verify.py
 python tools/package_release.py
 ```
 
 构建使用 ForgeGradle 6.0.54、官方 1.20.1 映射和 Java 17。Gradle 可自动解析 Java 17 工具链；前置版本及 SHA-512 固定在 `dependencies.lock.json`。
+
+`optimize_item_textures.py` 从内嵌像素数据重建 29 张物品贴图和 4 张宴席方块贴图，仅需 Pillow，无需旧图集。`generate_resources.py` 同步生成两种宴席各 5 个份数状态的模型，并保留 1.20.1 Forge 的配方和数据目录格式。
 
 `verify.py` 检查素材，构建并重混淆正式 jar，运行 25 项 GameTests，再依次启动三个会自动截图和退出的开发客户端，检查 31 个物品模型、13 个效果图标、8 种厨刀手持视角及两把刀的中文提示。它核对实际测试通过记录，避免把服务器启动失败后的 Gradle 成功退出误判为测试成功。
 
@@ -70,3 +73,9 @@ python tools/package_release.py
 Bosses'Rise 2.1.2 自身的沙虫模型会触发 GeckoLib 几何格式警告；本附属保留官方前置文件及其校验值。
 
 代码及原创素材沿用 MIT 协议，前置模组属于各自作者。
+
+## CurseForge 发布
+
+先完成构建和验证，再运行 `python tools/publish_curseforge.py` 预览本版本的发布内容。加 `--all` 可包含相邻目录中的另一版本，加 `--upload` 执行上传。
+
+通过 `CURSEFORGE_API_TOKEN` 环境变量提供令牌，或用 `--tokens <path>` 读取与 MobSpawnController 发布脚本相同格式的 `api_tokens.json`。令牌文件、发布回执与构建产物不提交到 Git。版本号统一读取 `gradle.properties`，更新日志读取 `CHANGELOG-<版本>.md`。
