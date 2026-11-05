@@ -5,6 +5,7 @@ import hashlib
 import shutil
 import zipfile
 import re
+from release_common import project_files
 
 ROOT = Path(__file__).resolve().parents[1]
 RELEASE = ROOT / 'release'
@@ -27,6 +28,7 @@ with zipfile.ZipFile(jar) as archive:
     assert 'data/bossesrise_delight/recipe/cutting/kraken_hotpot.json' not in entries
 shutil.copy2(jar, RELEASE / jar.name)
 shutil.copy2(ROOT / f'build/libs/bossesrise-delight-1.21.1-neoforge-{version}-sources.jar', RELEASE)
+shutil.copy2(ROOT / f'CHANGELOG-{version}.md', RELEASE)
 
 log = (ROOT / 'run-gametest/logs/latest.log').read_text(encoding='utf-8')
 matches = re.findall(r'All (\d+) required tests passed', log)
@@ -69,13 +71,11 @@ if tooltip_review_file.exists():
 (ROOT / 'docs/verification-report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
 (RELEASE / 'verification-report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
 
-excluded = {'.gradle', 'build', 'research', 'libs', 'release', 'run-client', 'run-server', 'run-gametest', 'run-asset-review', 'run-knife-review', 'run-knife-tooltip-review', '__pycache__'}
 source_zip = RELEASE / f'bossesrise-delight-{version}-project.zip'
 with zipfile.ZipFile(source_zip, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
-    for path in sorted(ROOT.rglob('*')):
+    for path in project_files():
         relative = path.relative_to(ROOT)
-        if path.is_file() and not any(part in excluded for part in relative.parts):
-            archive.write(path, Path('BossesRiseDelight') / relative)
+        archive.write(path, Path('BossesRiseDelight') / relative)
 checksums = '\n'.join(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}' for path in sorted(RELEASE.iterdir()) if path.suffix in {'.jar', '.zip'}) + '\n'
 (RELEASE / 'SHA256SUMS.txt').write_text(checksums, encoding='utf-8')
 print(f'Packaged {jar.name}: {jar.stat().st_size} bytes; verified {test_count} game tests, {content["items"]} items, {content["effects"]} effect icons, {len(recipes)} recipes and {len(textures)} textures.')

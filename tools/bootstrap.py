@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import urllib.request
+from release_common import mod_version
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -10,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 (ROOT / 'research').mkdir(exist_ok=True)
 
 def get(url):
-    request = urllib.request.Request(url, headers={'User-Agent': 'BossesRiseDelight-development/0.1.0'})
+    request = urllib.request.Request(url, headers={'User-Agent': f'BossesRiseDelight-development/{mod_version()}'})
     with urllib.request.urlopen(request, timeout=90) as response:
         return response.read()
 

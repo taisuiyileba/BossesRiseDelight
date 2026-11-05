@@ -1,0 +1,10 @@
+{
+  "project_id": 1729419,
+  "slug": "bossesrise-delight",
+  "minecraft": "1.21.1",
+  "loader": "NeoForge",
+  "java": 21,
+  "artifact": "bossesrise-delight-1.21.1-neoforge",
+  "game_versions": [11779, 10150, 9638, 9639, 11135],
+  "dependencies": ["bossesrise", "farmers-delight"]
+}

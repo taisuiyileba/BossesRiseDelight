@@ -1,12 +1,12 @@
 # Bosses'Rise Delight / 首领乐事
 
-Minecraft **1.21.1** · NeoForge **21.1.219+** · Java **21** · 版本 **1.0.0**。
+Minecraft **1.21.1** · NeoForge **21.1.219+** · Java **21** · 版本 **1.1.0**。
 
 首领崛起 × 农夫乐事附属：五条首领食材路线、料理、厨刀、共享宴席，以及能改变战斗方式的原创餐食效果。
 
 ## 安装
 
-将编译生成的 `bossesrise-delight-1.21.1-neoforge-1.0.0.jar`（或发布包）放入游戏 `mods` 目录；客户端和服务端均需安装。前置：
+将编译生成的 `bossesrise-delight-1.21.1-neoforge-1.1.0.jar`（或发布包）放入游戏 `mods` 目录；客户端和服务端均需安装。前置：
 
 - [Bosses'Rise 2.1.2](https://modrinth.com/mod/bossesrise/version/lE9PF6Wp)
 - [Farmer's Delight 1.3.4](https://modrinth.com/mod/farmers-delight/version/XTVZDOol)
@@ -96,7 +96,7 @@ pvpProcs = false
 - [`docs/in-game-preview.png`](docs/in-game-preview.png)：实际客户端渲染。
 - [`docs/verification-report.json`](docs/verification-report.json)：验证记录。
 
-20 项游戏内测试覆盖五个首领掉落表、加工配方、满饥饿食用、两种宴席容器守恒、额外伤害与冷却、霜盾重建、真实水中补气与防御、战魂护命、吸收心、虚空伤害和默认玩家攻击规则。客户端检查全部 31 个物品模型和 13 个效果图标。当前为 1.0.0 正式发布版本。
+20 项游戏内测试覆盖五个首领掉落表、加工配方、满饥饿食用、两种宴席容器守恒、额外伤害与冷却、霜盾重建、真实水中补气与防御、战魂护命、吸收心、虚空伤害和默认玩家攻击规则。客户端检查全部 31 个物品模型和 13 个效果图标。当前为 1.1.0 正式发布版本。
 
 ## 开发
 
@@ -115,3 +115,9 @@ python tools/package_release.py
 新增素材导出：`tools/export_new_assets.cjs`；旧图集导出：`tools/export_textures.cjs`。导出依赖Node.js和sharp，素材检查脚本核对尺寸、调色板、居中及资源引用。
 
 参考：[Farmer's Delight](https://github.com/vectorwing/FarmersDelight/tree/1.21)、[Nether's Delight](https://github.com/Chefs-Delight/NethersDelight_Forge)、[Ocean's Delight](https://github.com/Scouter456/Oceans_Delight)。本项目基于 MIT 协议开源，代码与原创素材均使用 MIT 许可证，前置模组属于各自作者。
+
+## CurseForge 发布
+
+先完成构建和验证，再运行 `python tools/publish_curseforge.py` 预览本版本的发布内容。加 `--all` 可包含相邻目录中的另一版本，加 `--upload` 执行上传。
+
+通过 `CURSEFORGE_API_TOKEN` 环境变量提供令牌，或用 `--tokens <path>` 读取与 MobSpawnController 发布脚本相同格式的 `api_tokens.json`。令牌文件、发布回执与构建产物不提交到 Git。版本号统一读取 `gradle.properties`，更新日志读取 `CHANGELOG-<版本>.md`。
